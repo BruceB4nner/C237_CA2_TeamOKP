@@ -1,0 +1,28 @@
+{
+  "name": "c237_ca2_teamokp",
+  "version": "1.0.0",
+  "description": "67",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BruceB4nner/C237_CA2_TeamOKP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/BruceB4nner/C237_CA2_TeamOKP/issues"
+  },
+  "homepage": "https://github.com/BruceB4nner/C237_CA2_TeamOKP#readme",
+  "dependencies": {
+    "connect-flash": "^0.1.1",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "mysql2": "^3.23.0"
+  }
+}
