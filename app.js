@@ -64,7 +64,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port http://localhost:${PORT}`);
 });
-//HI GUYS I MADE THE REGISTER ROUTE//
+//HI GUYS I MADE THE REGISTER ROUTE
 //Register Session MiddleWare(Josh)
 app.use(session({
     secret: 'secret',
@@ -98,7 +98,6 @@ const validateRegistration = (req, res, next) => {
 
 //POST Route + Regsitration Validation(Josh)
 app.post('/register', validateRegistration, (req, res) => {
-    //******** TODO: Update register route to include role. ********//
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact , role) VALUES (?, ?, SHA2(? ,256), ?, ? ,?)';
