@@ -60,10 +60,6 @@ app.get('/products', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port http://localhost:${PORT}`);
-});
 //HI GUYS I MADE THE REGISTER ROUTE
 //Register Session MiddleWare(Josh)
 app.use(session({
@@ -110,4 +106,9 @@ app.post('/register', validateRegistration, (req, res) => {
         res.redirect('/login');
     });
 });
-//tfyytdydtkytxy5sf6tuuyf
+
+// all routes go above this port initializer please thank u :)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port http://localhost:${PORT}`);
+});
