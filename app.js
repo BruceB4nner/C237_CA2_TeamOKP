@@ -54,9 +54,9 @@ app.get('/', (req, res) => {
 app.get('/products', (req, res) => {
   const search = req.query.search || '';
   const sql = 'SELECT * FROM products WHERE name LIKE ? AND stock > 0';
-  db.query('SELECT * FROM products WHERE stock > 0', (err, results) => {
+  connection.query('SELECT * FROM products WHERE stock > 0', (err, results) => {
     if (err) throw err;
-    res.render('products', { products: results });
+    res.render('products', { products: results, search: search});
   });
 });
 
@@ -97,7 +97,7 @@ app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
     const sql = 'INSERT INTO users (username, email, password, address, contact , role) VALUES (?, ?, SHA2(? ,256), ?, ? ,?)';
-    db.query(sql, [username, email, password, address, contact, role], (err, result) => {
+    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
         if (err) {
             throw err;
         }
