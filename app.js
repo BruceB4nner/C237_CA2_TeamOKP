@@ -29,7 +29,6 @@ connection.connect((err) => {
     console.log('Connected to MySQL database');
 });
 
-// Set up view engine
 app.set('view engine', 'ejs');
 
 // Enable static files
@@ -52,6 +51,37 @@ app.use((req, res, next) => {
     res.locals.user = req.session.user;
     next();
 });
+
+// Only lets the request through if logged-in user owns this product, or is an admin
+function isOwnerOrAdmin(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  const productId = req.params.id;
+  const sql = 'SELECT * FROM products WHERE productId = ?';
+
+  connection.query(sql, [productId], (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).send('Server error');
+    }
+    if (results.length === 0) {
+      return res.status(404).send('Product not found');
+    }
+
+    const product = results[0];
+    const isOwner = product.userId === req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+
+    if (!isOwner && !isAdminUser) {
+      return res.status(403).send('Forbidden: You can only edit or delete your own products');
+    }
+
+    req.product = product;
+    next();
+  });
+}
 
 // Categories array used across routes (Ning Xin)
 const CATEGORIES = [
