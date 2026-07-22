@@ -9,3 +9,8 @@
   font-weight: 400;
   font-style: italic;
 }
+
+html,body{height: 100%;}
+body {display: flex;flex-direction: column;min-height: 100vh;}
+main, section {flex: 1; /* pushes footer down */}
+.footer {margin-top: auto;}
