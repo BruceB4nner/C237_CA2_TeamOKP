@@ -51,7 +51,7 @@
                 </select>
             </div>
 
-            <!-- NEW: Sort By Dropdown Filter -->
+            <!-- Sort By Dropdown Filter -->
             <div class="col-md-3">
                 <select name="sort" id="sortSelect" class="form-select" onchange="this.form.submit()">
                     <option value="">Sort By: Featured</option>
@@ -181,7 +181,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- NING XIN: In-Order Live Search + Dynamic Counter Script -->
+<!-- NING XIN: In-Order Live Search + Dynamic Counter + Real-Time Text Highlighting Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const liveInput = document.getElementById('liveSearchInput');
@@ -190,43 +190,86 @@
     const resultsCountEl = document.getElementById('resultsCount');
     const resultsTextEl = document.getElementById('resultsText');
 
+    // Save original title text into HTML dataset to allow safe highlighting & resetting
+    productCols.forEach(col => {
+      const titleEl = col.querySelector('.product-title');
+      if (titleEl) {
+        titleEl.dataset.originalText = titleEl.textContent;
+      }
+    });
+
     if (liveInput) {
       liveInput.addEventListener('input', function() {
-        const rawQuery = this.value.toLowerCase().trim();
+        const rawQuery = this.value.trim();
+        const lowerQuery = rawQuery.toLowerCase();
         let visibleCount = 0;
 
-        if (rawQuery === '') {
-          productCols.forEach(col => col.classList.remove('d-none'));
+        if (lowerQuery === '') {
+          // Restore original titles, show all cards
+          productCols.forEach(col => {
+            col.classList.remove('d-none');
+            const titleEl = col.querySelector('.product-title');
+            if (titleEl && titleEl.dataset.originalText) {
+              titleEl.textContent = titleEl.dataset.originalText;
+            }
+          });
+
           if (noLiveResults) noLiveResults.classList.add('d-none');
           if (resultsCountEl) resultsCountEl.textContent = productCols.length;
           if (resultsTextEl) resultsTextEl.textContent = productCols.length === 1 ? 'product found' : 'products found';
           return;
         }
 
-        const queryWords = rawQuery.split(/\s+/);
+        const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 0);
+        
+        // Sequential Search Pattern
         const pattern = queryWords.map(word => `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).join('.*');
         const searchRegex = new RegExp(pattern, 'i');
 
+        // Highlighting Pattern
+        const highlightPattern = queryWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+        const highlightRegex = new RegExp(`(${highlightPattern})`, 'gi');
+
         productCols.forEach(col => {
           const productName = col.getAttribute('data-name') || '';
+          const titleEl = col.querySelector('.product-title');
+          const originalText = titleEl ? (titleEl.dataset.originalText || titleEl.textContent) : '';
 
           if (searchRegex.test(productName)) {
             col.classList.remove('d-none');
             visibleCount++;
+
+            // Apply yellow highlight tag to matching words
+            if (titleEl && highlightPattern) {
+              titleEl.innerHTML = originalText.replace(
+                highlightRegex, 
+                '<mark class="bg-warning text-dark px-1 rounded-1">$1</mark>'
+              );
+            }
           } else {
             col.classList.add('d-none');
+            if (titleEl) {
+              titleEl.textContent = originalText;
+            }
           }
         });
 
+        // Update live counter
         if (resultsCountEl) resultsCountEl.textContent = visibleCount;
         if (resultsTextEl) resultsTextEl.textContent = visibleCount === 1 ? 'product found' : 'products found';
 
+        // Toggle empty alert
         if (visibleCount === 0 && productCols.length > 0) {
           if (noLiveResults) noLiveResults.classList.remove('d-none');
         } else {
           if (noLiveResults) noLiveResults.classList.add('d-none');
         }
       });
+
+      // Run live highlighting automatically if input was pre-filled on load
+      if (liveInput.value.trim() !== '') {
+        liveInput.dispatchEvent(new Event('input'));
+      }
     }
   });
 </script>
