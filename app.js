@@ -43,7 +43,8 @@ app.use(session({
     secret: 'someSecretKeyChangeMe',
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 1 week session
+    // Session expires after 1 week of inactivity
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
 }));
 app.use(flash());
 
@@ -74,6 +75,35 @@ function isAdmin(req, res, next) {
     res.status(403).send('Forbidden: Admins only');
 }
 
+    // Shuffle results for randomness
+    const shuffled = results.sort(() => 0.5 - Math.random());
+
+    res.render('index', {
+      user: req.session.user,
+      messages: req.flash('success'),
+      products: shuffled
+    });
+  });
+});
+
+
+app.get('/products', (req, res) => {
+    const search = req.query.search || '';
+    const sql = 'SELECT * FROM products WHERE productName LIKE ? AND stock > 0';
+    connection.query(sql, [`%${search}%`], (err, results) => {
+        if (err) throw err;
+        res.render('products', { products: results, search: search, user: req.session.user });
+    });
+});
+
+//HI GUYS I MADE THE REGISTER ROUTE
+
+//Register GET Route (Josh)
+app.get('/register', (req, res) => {
+    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
+});
+
+//validateRegistration (Josh)
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
