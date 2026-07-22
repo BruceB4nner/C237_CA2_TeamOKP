@@ -62,7 +62,7 @@ app.get('/products', (req, res) => {
   const sql = 'SELECT * FROM products WHERE name LIKE ? AND stock > 0';
   connection.query('SELECT * FROM products WHERE stock > 0', (err, results) => {
     if (err) throw err;
-    res.render('products', { products: results, search: search});
+    res.render('products', { products: results, search: search , user: req.session.user});
   });
 });
 
@@ -166,10 +166,12 @@ app.get('/logout', (req, res) => {
 });
 
 // add product route (myiesha)
+// get route
 app.get('/addProduct', (req, res) => {
     res.render('addProducts');
 });
 
+// post route
 app.post('/addProduct', (req, res) => {
 
     const {
@@ -200,6 +202,18 @@ app.post('/addProduct', (req, res) => {
 
 });
 
+app.post('/products/delete/:id', (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+    return res.status(403).send('Forbidden: Admins only');
+  }
+
+  const productId = req.params.id;
+  connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
+    if (err) throw err;
+    req.flash('success', 'Product deleted successfully');
+    res.redirect('/products');
+  });
+});
 
 // all routes go above this port initializer please thank u :)
 const PORT = process.env.PORT || 3000;
