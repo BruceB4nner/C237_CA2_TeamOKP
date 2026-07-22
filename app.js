@@ -112,6 +112,11 @@ app.post('/register', validateRegistration, (req, res) => {
         res.redirect('/login');
     });
 });
+app.get('/angie',(req,res)=>{res.render('angie')})
+app.get('/josh',(req,res)=>{res.render('josh')})
+app.get('/kp',(req,res)=>{res.render('kaipeng')})
+app.get('/myiesha',(req,res)=>{res.render('myiesha')})
+app.get('/nx',(req,res)=>{res.render('ningxin')})
 
 //Login Route Starts here (Josh)
 app.get('/login', (req, res) => {
