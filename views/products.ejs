@@ -31,11 +31,14 @@
                 <select name="category" class="form-select text-capitalize">
                     <option value="">All Categories</option>
                     <% 
-                        const defaultCategories = [
-                            'toys & collectibles', 'computers & tech', "women's fashion", 
-                            "men's fashion", 'video gaming', 'furniture & home living', 
-                            'health & nutrition', 'tickets & vouchers', 'others'
-                        ];
+                const defaultCategories = [
+                'toys & collectibles', 'computers & tech', "women's fashion", 
+                "men's fashion", 'video gaming', 'furniture & home living', 
+                'sports & wellness', 'tickets & vouchers', 'others'
+                ];
+                const catList = (typeof categories !== 'undefined' && categories.length > 0) ? categories : defaultCategories;
+                const currentCat = typeof selectedCategory !== 'undefined' ? selectedCategory : '';
+                    %>
                         const catList = (typeof categories !== 'undefined' && categories.length > 0) ? categories : defaultCategories;
                         const currentCat = typeof selectedCategory !== 'undefined' ? selectedCategory : '';
                     %>
