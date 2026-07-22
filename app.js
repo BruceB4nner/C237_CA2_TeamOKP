@@ -200,6 +200,18 @@ app.post('/addProduct', (req, res) => {
 
 });
 
+app.post('/products/delete/:id', (req, res) => {
+  if (!req.session.user || req.session.user.role !== 'admin') {
+    return res.status(403).send('Forbidden: Admins only');
+  }
+
+  const productId = req.params.id;
+  connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
+    if (err) throw err;
+    req.flash('success', 'Product deleted successfully');
+    res.redirect('/products');
+  });
+});
 
 // all routes go above this port initializer please thank u :)
 const PORT = process.env.PORT || 3000;
