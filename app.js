@@ -179,15 +179,34 @@ app.get('/logout', (req, res) => {
     });
 });
 
-app.get('/:category', (req, res) => {
-  const category = req.params.category; // e.g. "toys-collectibles"
 
-  const sql = 'SELECT * FROM products WHERE category = ?';
-  db.query(sql, [category], (err, results) => {
+
+
+//View Product (Josh)
+app.get('/products/:id', (req, res) => {
+  const productId = req.params.id;
+  const sql = 'SELECT * FROM products WHERE productId = ?';
+
+  connection.query(sql, [productId], (err, results) => {
     if (err) throw err;
-    res.render('category', { category, products: results });
+
+    if (results.length === 0) {
+      return res.status(404).send('Product not found');
+    }
+
+    const product = results[0];
+    res.render('productDetails', { product, user: req.session.user });
   });
 });
+
+
+
+
+
+
+
+
+
 
 
 
