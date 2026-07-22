@@ -11,40 +11,63 @@
 
 <div class="container mt-5">
 
-    <h2 class="mb-4">Sell an Item</h2>
+    <h2 class="mb-4">Create a New Listing</h2>
 
     <form action="/addProduct" method="POST">
 
+        <!-- Product Name -->
         <div class="mb-3">
             <label class="form-label">Product Name</label>
             <input
                 type="text"
                 class="form-control"
                 name="productName"
+                placeholder="Enter product name"
                 required>
         </div>
 
+        <!-- Category -->
         <div class="mb-3">
             <label class="form-label">Category</label>
 
             <select class="form-select" name="category" required>
 
-                <option value="">Select Category</option>
+                <option value="">Select a Category</option>
 
-                <option value="Clothing">👕 Clothing</option>
+                <option value="Toys & Collectibles">🧸 Toys & Collectibles</option>
 
-                <option value="Bicycle">🚲 Bicycle</option>
+                <option value="Computers & Tech">💻 Computers & Tech</option>
 
-                <option value="Vehicles">🚗 Vehicles</option>
+                <option value="Women's Fashion">👗 Women's Fashion</option>
 
-                <option value="Electronics">💻 Electronics</option>
+                <option value="Men's Fashion">👔 Men's Fashion</option>
 
-                <option value="Miscellaneous">📦 Miscellaneous</option>
+                <option value="Video Gaming">🎮 Video Gaming</option>
+
+                <option value="Furniture & Home Living">🛋️ Furniture & Home Living</option>
+
+                <option value="Health & Nutrition">💊 Health & Nutrition</option>
+
+                <option value="Tickets & Vouchers">🎟️ Tickets & Vouchers</option>
+
+                <option value="Others">📦 Others</option>
 
             </select>
-
         </div>
 
+        <!-- Description -->
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+
+            <textarea
+                class="form-control"
+                name="description"
+                rows="4"
+                placeholder="Describe your item..."
+                required></textarea>
+        </div>
+
+        <!-- Quantity -->
         <div class="mb-3">
             <label class="form-label">Quantity</label>
 
@@ -52,20 +75,24 @@
                 type="number"
                 class="form-control"
                 name="quantity"
+                min="1"
                 required>
         </div>
 
+        <!-- Price -->
         <div class="mb-3">
             <label class="form-label">Price ($)</label>
 
             <input
                 type="number"
                 step="0.01"
+                min="0"
                 class="form-control"
                 name="price"
                 required>
         </div>
 
+        <!-- Image -->
         <div class="mb-3">
             <label class="form-label">Image URL</label>
 
@@ -73,12 +100,21 @@
                 type="text"
                 class="form-control"
                 name="image"
+                placeholder="https://example.com/image.jpg"
                 required>
         </div>
 
-        <button class="btn btn-success">
-            Post Listing
-        </button>
+        <div class="d-flex gap-2">
+
+            <button type="submit" class="btn btn-success">
+                Post Listing
+            </button>
+
+            <a href="/products" class="btn btn-secondary">
+                Cancel
+            </a>
+
+        </div>
 
     </form>
 
