@@ -308,18 +308,18 @@ app.post('/addProduct', (req, res) => {
         return res.redirect('/login');
     }
 
-    const { productName, category, description, quantity, price, image } = req.body;
-    const userId = req.session.user.userId;
+    const { productName, category, description, price, image ,stock } = req.body;
+    const userId = req.session.user.id;
 
     const sql = `
         INSERT INTO products
-        (productName, category, description, quantity, price, image, stock, userId)
-        VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+        (productName, category, description, price, image, stock, userId)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     connection.query(
         sql,
-        [productName, category, description, quantity, price, image, userId],
+        [productName, category, description, price, image, stock , userId],
         (err) => {
             if (err) throw err;
             res.redirect('/products');
