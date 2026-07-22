@@ -179,6 +179,18 @@ app.get('/logout', (req, res) => {
     });
 });
 
+app.get('/:category', (req, res) => {
+  const category = req.params.category; // e.g. "toys-collectibles"
+
+  const sql = 'SELECT * FROM products WHERE category = ?';
+  db.query(sql, [category], (err, results) => {
+    if (err) throw err;
+    res.render('category', { category, products: results });
+  });
+});
+
+
+
 // add product route (myiesha)
 // get route
 app.get('/addProduct', (req, res) => {
