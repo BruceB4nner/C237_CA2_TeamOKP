@@ -1,0 +1,93 @@
+.instrument-serif-regular {
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.instrument-serif-regular-italic {
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+html,body{height: 100%;}
+body {display: flex;flex-direction: column;min-height: 100vh;}
+main, section {flex: 1; /* pushes footer down */}
+.footer {margin-top: auto;}
+
+#productCarousel{max-width: 1000px;margin: 10px auto;border-radius: 12px;overflow: hidden;}
+#productCarousel .carousel-item img{width: 100%;height: 450px;object-fit: cover;border-radius: 12px;transition: transform 0.4s ease, opacity 0.4s ease !important; }
+#productCarousel .carousel-item img:hover{transform: scale(1.03);opacity: 0.9;}
+
+/* Center button & review */
+#productCarousel .col-md-6 {
+  display: flex;
+  flex-direction: column;       /* stack text and button vertically */
+  justify-content: center;      /* center vertically */
+  align-items: center;          /* center horizontally */
+  text-align: center;
+  height: 100%;                 /* ensures full column height */
+}
+#productCarousel .col-md-6 p.fst-italic {margin-bottom: 10px;}
+#productCarousel .product-label {
+  position: absolute; bottom: 15px;     
+  left: 50%;transform: translateX(-50%);background: rgba(55, 39, 17, 0.721); 
+  color: #eae7e7;padding: 8px 13px;border-radius: 8px;
+  font-size: 1.1rem;font-weight: 600;text-align: center;min-width: 120px;}
+#leftbutton,#rightbutton{transition: background-color 0.3s ease, opacity 0.3s ease;}
+#leftbutton:hover, #rightbutton:hover{background-color: rgb(44, 44, 55);opacity: 0.25;}
+
+/* ningxin styles */
+.product-card-link {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* List View Overrides */
+        #productGrid.list-view .product-card-col {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+        #productGrid.list-view .card {
+            flex-direction: row !important;
+            align-items: center;
+            overflow: hidden;
+        }
+        #productGrid.list-view .product-card-link {
+            flex-direction: row !important;
+            align-items: center;
+            width: 100%;
+        }
+        #productGrid.list-view .card-img-top {
+            width: 220px !important;
+            height: 160px !important;
+            flex-shrink: 0;
+            object-fit: cover;
+            border-radius: 0.375rem 0 0 0.375rem !important;
+        }
+        #productGrid.list-view .card-body {
+            text-align: left !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: center;
+            padding: 1rem 1.5rem !important;
+        }
+        #productGrid.list-view .quick-view-wrapper {
+            width: 200px !important;
+            flex-shrink: 0;
+            padding: 1rem !important;
+            margin: 0 !important;
+        }
+        @media (max-width: 768px) {
+            #productGrid.list-view .card,
+            #productGrid.list-view .product-card-link {
+                flex-direction: column !important;
+            }
+            #productGrid.list-view .card-img-top,
+            #productGrid.list-view .quick-view-wrapper {
+                width: 100% !important;
+            }
+        }
