@@ -146,7 +146,7 @@ app.post('/login', (req, res) => {
             req.session.user = results[0]; // store user in session
             req.flash('success', 'Login successful!');
             //******** TO DO: Update to redirect users to /dashboard route upon successful log in ********//
-            res.redirect('/index');
+            res.redirect('/');
         } else {
             // Invalid credentials
             req.flash('error', 'Invalid email or password.');
@@ -155,6 +155,15 @@ app.post('/login', (req, res) => {
     });
 });
 
+//Log Out Route(Josh)
+app.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.redirect('/'); // fallback if session can't be destroyed
+    }
+    res.redirect('/'); // send them back to login page
+  });
+});
 
 
 // all routes go above this port initializer please thank u :)
