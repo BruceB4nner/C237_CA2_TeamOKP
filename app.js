@@ -102,6 +102,16 @@ const validateRegistration = (req, res, next) => {
     next();
 };
 
+//isAdmin funciton 
+
+function isAdmin(req, res, next) {
+  if (req.session.user && req.session.user.role === 'admin') {
+    return next();
+  }
+  res.status(403).send('Forbidden: Admins only');
+}
+
+
 //POST Route + Regsitration Validation(Josh)
 app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
@@ -213,7 +223,7 @@ app.post('/addProduct', (req, res) => {
 
 });
 
-app.post('/products/delete/:id', (req, res) => {
+app.post('/products/delete/:id', isAdmin, (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Forbidden: Admins only');
     }
