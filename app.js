@@ -5,12 +5,14 @@ const multer = require('multer');
 const session = require('express-session');
 const flash = require('connect-flash');
 
+// Multer Storage Setup
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, 'public/images') },
+    destination: (req, file, cb) => { cb(null, 'public/images'); },
     filename: (req, file, cb) => { cb(null, file.originalname); }
 });
 const upload = multer({ storage: storage });
 
+// Azure MySQL Connection
 const connection = mysql.createConnection({
     host: 'c237-eaint-mysql.mysql.database.azure.com',
     user: 'c237_029',
@@ -18,6 +20,7 @@ const connection = mysql.createConnection({
     database: 'c237_029_teamongkaipeng',
     ssl: { rejectUnauthorized: true }
 });
+
 connection.connect((err) => {
     if (err) {
         console.error('Error connecting to MySQL:', err);
@@ -27,17 +30,23 @@ connection.connect((err) => {
 });
 
 app.set('view engine', 'ejs');
+
+// Enable static files
 app.use(express.static('public'));
+
+// Enable form processing
 app.use(express.urlencoded({ extended: false }));
 
+// Session + Flash setup
 app.use(session({
     secret: 'someSecretKeyChangeMe',
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 1 week session
 }));
 app.use(flash());
 
+// Middleware to track session globally across views
 app.use((req, res, next) => {
     res.locals.user = req.session.user;
     next();
@@ -74,43 +83,26 @@ function isOwnerOrAdmin(req, res, next) {
   });
 }
 
-//routes go HEREEEEEEEEEEEE (add all codes below this to prevent override)
+// Categories array used across routes (Ning Xin)
+const CATEGORIES = [
+    'toys & collectibles',
+    'computers & tech',
+    "women's fashion",
+    "men's fashion",
+    'video gaming',
+    'furniture & home living',
+    'sports & wellness',
+    'tickets & vouchers',
+    'others'
+];
 
-app.get('/', (req, res) => {
-  const sql = 'SELECT * FROM products WHERE stock > 0';
-
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching products:', err);
-      return res.render('index', {
-        user: req.session.user,
-        messages: req.flash('success'),
-        products: []
-      });
+// Helper Middleware (Josh)
+function isAdmin(req, res, next) {
+    if (req.session.user && req.session.user.role === 'admin') {
+        return next();
     }
-
-    const shuffled = results.sort(() => 0.5 - Math.random());
-
-    res.render('index', {
-      user: req.session.user,
-      messages: req.flash('success'),
-      products: shuffled
-    });
-  });
-});
-
-app.get('/products', (req, res) => {
-    const search = req.query.search || '';
-    const sql = 'SELECT * FROM products WHERE productName LIKE ? AND stock > 0';
-    connection.query(sql, [`%${search}%`], (err, results) => {
-        if (err) throw err;
-        res.render('products', { products: results, search: search, user: req.session.user });
-    });
-});
-
-app.get('/register', (req, res) => {
-    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
-});
+    res.status(403).send('Forbidden: Admins only');
+}
 
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
@@ -125,31 +117,108 @@ const validateRegistration = (req, res, next) => {
     next();
 };
 
-function isAdmin(req, res, next) {
-  if (req.session.user && req.session.user.role === 'admin') {
-    return next();
-  }
-  res.status(403).send('Forbidden: Admins only');
-}
+// ==========================================
+// NING XIN: HOMEPAGE ROUTE (Carousel + Reviews + Categories)
+// ==========================================
+app.get('/', (req, res) => {
+    const sqlProducts = 'SELECT * FROM products WHERE stock > 0';
+    const sqlReviews = `
+        SELECT r.*, u.username, p.productName AS product_name 
+        FROM reviews r 
+        JOIN users u ON r.user_id = u.id 
+        JOIN products p ON r.product_id = p.productId 
+        LIMIT 4
+    `;
+
+    connection.query(sqlProducts, (err, products) => {
+        if (err) {
+            console.error('Error fetching products for homepage:', err);
+            products = [];
+        }
+
+        connection.query(sqlReviews, (err, reviews) => {
+            if (err) {
+                reviews = [];
+            }
+
+            res.render('index', {
+                user: req.session.user,
+                messages: req.flash('success'),
+                products: products || [],
+                reviews: reviews || [],
+                categories: CATEGORIES
+            });
+        });
+    });
+});
+
+// ==========================================
+// NING XIN: PRODUCT VIEWING, SEARCHING, CATEGORY FILTERING & SORTING
+// ==========================================
+app.get('/products', (req, res) => {
+    const search = req.query.search || '';
+    const category = req.query.category || '';
+    const sort = req.query.sort || '';
+
+    let sql = 'SELECT * FROM products WHERE 1=1';
+    let queryParams = [];
+
+    // Filter by Keyword (searches productName)
+    if (search.trim() !== '') {
+        sql += ' AND productName LIKE ?';
+        queryParams.push(`%${search.trim()}%`);
+    }
+
+    // Filter by Selected Category
+    if (category.trim() !== '') {
+        sql += ' AND category = ?';
+        queryParams.push(category.trim());
+    }
+
+    // Dynamic SQL Sorting Logic
+    if (sort === 'price_asc') {
+        sql += ' ORDER BY price ASC';
+    } else if (sort === 'price_desc') {
+        sql += ' ORDER BY price DESC';
+    } else if (sort === 'newest') {
+        sql += ' ORDER BY productId DESC';
+    }
+
+    connection.query(sql, queryParams, (err, results) => {
+        if (err) {
+            console.error('Error fetching products:', err);
+            return res.status(500).send('Database Error');
+        }
+
+        res.render('products', {
+            products: results,
+            search: search,
+            selectedCategory: category,
+            selectedSort: sort, // Passed active sort selection to view
+            categories: CATEGORIES,
+            user: req.session.user
+        });
+    });
+});
+
+// ==========================================
+// AUTHENTICATION ROUTES (Josh)
+// ==========================================
+
+app.get('/register', (req, res) => {
+    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
+});
 
 app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
-    const sql = 'INSERT INTO users (username, email, password, address, contact , role) VALUES (?, ?, SHA2(? ,256), ?, ? ,?)';
+    const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA2(?, 256), ?, ?, ?)';
     connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
-        if (err) {
-            throw err;
-        }
-        console.log(result);
+        if (err) throw err;
         req.flash('success', 'Registration successful! Please log in.');
         res.redirect('/login');
     });
 });
-app.get('/angie',(req,res)=>{res.render('angie')})
-app.get('/josh',(req,res)=>{res.render('josh')})
-app.get('/kp',(req,res)=>{res.render('kaipeng')})
-app.get('/myiesha',(req,res)=>{res.render('myiesha')})
-app.get('/nx',(req,res)=>{res.render('ningxin')})
 
 app.get('/login', (req, res) => {
     res.render('login', {
@@ -168,9 +237,7 @@ app.post('/login', (req, res) => {
 
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA2(?,256)';
     connection.query(sql, [email, password], (err, results) => {
-        if (err) {
-            throw err;
-        }
+        if (err) throw err;
 
         if (results.length > 0) {
             req.session.user = results[0];
@@ -185,31 +252,32 @@ app.post('/login', (req, res) => {
 
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
-        if (err) {
-            return res.redirect('/');
-        }
+        if (err) return res.redirect('/');
         res.redirect('/');
     });
 });
 
+// ==========================================
+// PRODUCT DETAILS & MANAGEMENT
+// ==========================================
+
 app.get('/products/:id', (req, res) => {
-  const productId = req.params.id;
-  const sql = 'SELECT * FROM products WHERE productId = ?';
+    const productId = req.params.id;
+    const sql = 'SELECT * FROM products WHERE productId = ?';
 
-  connection.query(sql, [productId], (err, results) => {
-    if (err) throw err;
+    connection.query(sql, [productId], (err, results) => {
+        if (err) throw err;
 
-    if (results.length === 0) {
-      return res.status(404).send('Product not found');
-    }
+        if (results.length === 0) {
+            return res.status(404).send('Product not found');
+        }
 
-    const product = results[0];
-    res.render('productDetails', { product, user: req.session.user });
-  });
+        const product = results[0];
+        res.render('productDetails', { product, user: req.session.user });
+    });
 });
 
 app.get('/addProduct', (req, res) => {
-
     if (!req.session.user) {
         return res.redirect('/login');
     }
@@ -217,89 +285,52 @@ app.get('/addProduct', (req, res) => {
     res.render('addProducts', {
         user: req.session.user
     });
-
 });
 
 app.post('/addProduct', (req, res) => {
-
     if (!req.session.user) {
         return res.redirect('/login');
     }
 
-    const {
-        productName,
-        category,
-        description,
-        quantity,
-        price,
-        image
-    } = req.body;
+    const { productName, category, description, quantity, price, image } = req.body;
+    const userId = req.session.user.userId;
 
-const userId = req.session.user.id;
-
-const sql = `
-    INSERT INTO products
-    (productName, category, description, quantity, price, image, stock, userId)
-    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
-`;
+    const sql = `
+        INSERT INTO products
+        (productName, category, description, quantity, price, image, stock, userId)
+        VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+    `;
 
     connection.query(
         sql,
-        [
-            productName,
-            category,
-            description,
-            quantity,
-            price,
-            image,
-            userId
-        ],
+        [productName, category, description, quantity, price, image, userId],
         (err) => {
-
             if (err) throw err;
-
             res.redirect('/products');
-
         }
     );
-
 });
 
-app.get('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
-  res.render('editProduct', { product: req.product, user: req.session.user });
-});
-
-app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
-  const productId = req.params.id;
-  const { productName, category, description, quantity, price, image, stock } = req.body;
-
-  const sql = `
-    UPDATE products
-    SET productName = ?, category = ?, description = ?, quantity = ?, price = ?, image = ?, stock = ?
-    WHERE productId = ?
-  `;
-
-  connection.query(sql, [productName, category, description, quantity, price, image, stock, productId], (err) => {
-    if (err) {
-      console.error('Error updating product:', err);
-      return res.send('Error updating product');
+app.post('/products/delete/:id', (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Forbidden: Admins only');
     }
-    req.flash('success', 'Product updated successfully');
-    res.redirect('/products');
-  });
+
+    const productId = req.params.id;
+    connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
+        if (err) throw err;
+        req.flash('success', 'Product deleted successfully');
+        res.redirect('/products');
+    });
 });
 
-app.post('/products/delete/:id', isOwnerOrAdmin, (req, res) => {
-  const productId = req.params.id;
-  connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
-    if (err) throw err;
-    req.flash('success', 'Product deleted successfully');
-    res.redirect('/products');
-  });
-});
+app.get('/angie', (req, res) => { res.render('angie'); });
+app.get('/josh', (req, res) => { res.render('josh'); });
+app.get('/kp', (req, res) => { res.render('kaipeng'); });
+app.get('/myiesha', (req, res) => { res.render('myiesha'); });
+app.get('/nx', (req, res) => { res.render('ningxin'); });
 
-// all routes go above this port initializer please thank u :)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port http://localhost:${PORT}`);
+    console.log(`Server running at http://localhost:${PORT}`);
 });
