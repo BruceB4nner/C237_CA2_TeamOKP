@@ -110,24 +110,34 @@ const validateRegistration = (req, res, next) => {
 
 //POST Route + Regsitration Validation(Josh)
 app.post('/register', validateRegistration, (req, res) => {
-    const { username, email, password, address, contact, role } = req.body;
 
-    const sql = 'INSERT INTO users (username, email, password, address, contact , role) VALUES (?, ?, SHA2(? ,256), ?, ? ,?)';
-    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
-        if (err) {
-            throw err;
-        }
-        console.log(result);
-        req.flash('success', 'Registration successful! Please log in.');
-        res.redirect('/login');
-    });
+    const {
+        username,
+        email,
+        password,
+        address,
+        contact,
+        role
+    } = req.body;
+
+    const sql =
+    `INSERT INTO users
+    (username,email,password,address,contact,role)
+    VALUES (?, ?, SHA2(?,256), ?, ?, ?)`;
+
+    connection.query(
+        sql,
+        [username,email,password,address,contact,role],
+        (err,result)=>{
+
+            if(err) throw err;
+
+            req.flash('success','Registration successful! Please log in.');
+            res.redirect('/login');
+
+        });
+
 });
-app.get('/angie',(req,res)=>{res.render('angie')})
-app.get('/josh',(req,res)=>{res.render('josh')})
-app.get('/kp',(req,res)=>{res.render('kaipeng')})
-app.get('/myiesha',(req,res)=>{res.render('myiesha')})
-app.get('/nx',(req,res)=>{res.render('ningxin')})
-
 //Login Route Starts here (Josh)
 app.get('/login', (req, res) => {
     res.render('login', { 
@@ -178,29 +188,52 @@ app.get('/logout', (req, res) => {
 // add product route (myiesha)
 // get route
 app.get('/addProduct', (req, res) => {
-    res.render('addProducts');
+
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+
+    res.render('addProducts', {
+        user: req.session.user
+    });
+
 });
 
 // post route
 app.post('/addProduct', (req, res) => {
 
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+
     const {
         productName,
         category,
+        description,
         quantity,
         price,
         image
     } = req.body;
 
-    const sql = `
-        INSERT INTO products
-        (productName, category, quantity, price, image, stock)
-        VALUES (?, ?, ?, ?, ?, 1)
-    `;
+const userId = req.session.user.userId;
+
+const sql = `
+    INSERT INTO products
+    (productName, category, description, quantity, price, image, stock, userId)
+    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+`;
 
     connection.query(
         sql,
-        [productName, category, quantity, price, image],
+        [
+            productName,
+            category,
+            description,
+            quantity,
+            price,
+            image,
+            userId
+        ],
         (err) => {
 
             if (err) throw err;
@@ -213,16 +246,49 @@ app.post('/addProduct', (req, res) => {
 });
 
 app.post('/products/delete/:id', (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-    return res.status(403).send('Forbidden: Admins only');
-  }
 
-  const productId = req.params.id;
-  connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
-    if (err) throw err;
-    req.flash('success', 'Product deleted successfully');
-    res.redirect('/products');
-  });
+    // User must be logged in
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+
+    const productId = req.params.id;
+    const userId = req.session.user.userId;
+
+    // Find the product first
+    connection.query(
+        "SELECT * FROM products WHERE productId = ?",
+        [productId],
+        (err, results) => {
+
+            if (err) throw err;
+
+            if (results.length === 0) {
+                return res.send("Product not found.");
+            }
+
+            // Check if logged in user owns the listing
+            if (results[0].userId != userId) {
+                return res.status(403).send("Access denied. You can only delete your own listings.");
+            }
+
+            // Delete the product
+            connection.query(
+                "DELETE FROM products WHERE productId = ?",
+                [productId],
+                (err) => {
+
+                    if (err) throw err;
+
+                    req.flash("success", "Listing deleted successfully!");
+                    res.redirect("/products");
+
+                }
+            );
+
+        }
+    );
+
 });
 
 // all routes go above this port initializer please thank u :)
