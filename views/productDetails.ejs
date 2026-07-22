@@ -18,7 +18,7 @@
 
         <% if (user && user.role === 'admin') { %>
           <form action="/products/delete/<%= product.productId %>" method="POST">
-            <button type="submit" class="btn btn-danger">Delete Product</button>
+            <button type="submit" onclick="return confirm('Delete this listing?')" class="btn btn-danger">Delete Product</button>
           </form>
         <% } %>
       </div>
@@ -26,5 +26,6 @@
   </div>
 
   <%- include('partials/footer.ejs') %>
+  
 </body>
 </html>

@@ -14,3 +14,12 @@ html,body{height: 100%;}
 body {display: flex;flex-direction: column;min-height: 100vh;}
 main, section {flex: 1; /* pushes footer down */}
 .footer {margin-top: auto;}
+#productCarousel {
+  max-width: 100%; /* adjust width as needed */
+  margin: auto;   /* center horizontally */
+}
+
+#productCarousel .carousel-item img {
+  height: 50%; /* smaller height */
+  object-fit: contain; /* keeps full image visible */
+}
