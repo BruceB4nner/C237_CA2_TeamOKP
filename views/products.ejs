@@ -12,25 +12,25 @@
 
 <div class="container mt-4">
 
-    <!-- Search, Category & Sort Filter Form -->
+    <!-- Search, Category, Price Range & Sort Filter Form -->
     <div class="bg-light p-3 rounded shadow-sm mb-3">
         <form method="GET" action="/products" class="row g-2 align-items-center" id="searchForm">
             
             <!-- Instant Live Search Input -->
-            <div class="col-md-4">
+            <div class="col-lg-3 col-md-6">
                 <input 
                     type="text" 
                     id="liveSearchInput"
                     class="form-control" 
                     name="search" 
                     value="<%= typeof search !== 'undefined' ? search : '' %>" 
-                    placeholder="⚡ Type here to search live..."
+                    placeholder="⚡ Search products..."
                     autocomplete="off"
                 >
             </div>
 
             <!-- Category Dropdown Filter -->
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-6">
                 <select name="category" id="categorySelect" class="form-select text-capitalize" onchange="this.form.submit()">
                     <option value="">All Categories</option>
                     <% 
@@ -42,6 +42,8 @@
                         const catList = (typeof categories !== 'undefined' && categories.length > 0) ? categories : defaultCategories;
                         const currentCat = typeof selectedCategory !== 'undefined' ? selectedCategory : '';
                         const currentSort = typeof selectedSort !== 'undefined' ? selectedSort : '';
+                        const currentMin = typeof minPrice !== 'undefined' ? minPrice : '';
+                        const currentMax = typeof maxPrice !== 'undefined' ? maxPrice : '';
                     %>
                     <% catList.forEach(cat => { %>
                         <option value="<%= cat %>" <%= currentCat === cat ? 'selected' : '' %>>
@@ -51,10 +53,20 @@
                 </select>
             </div>
 
+            <!-- Price Range Inputs (Min & Max Price) -->
+            <div class="col-lg-3 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">$</span>
+                    <input type="number" step="0.01" min="0" name="minPrice" class="form-control" placeholder="Min" value="<%= currentMin %>">
+                    <span class="input-group-text bg-white">-</span>
+                    <input type="number" step="0.01" min="0" name="maxPrice" class="form-control" placeholder="Max" value="<%= currentMax %>">
+                </div>
+            </div>
+
             <!-- Sort By Dropdown Filter -->
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-6">
                 <select name="sort" id="sortSelect" class="form-select" onchange="this.form.submit()">
-                    <option value="">Sort By: Featured</option>
+                    <option value="">Sort: Featured</option>
                     <option value="price_asc" <%= currentSort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
                     <option value="price_desc" <%= currentSort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
                     <option value="newest" <%= currentSort === 'newest' ? 'selected' : '' %>>Newest Listings</option>
@@ -62,8 +74,8 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            <div class="col-lg-2 col-md-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">Filter</button>
                 <a href="/products" class="btn btn-outline-secondary">Reset</a>
             </div>
         </form>
@@ -83,25 +95,39 @@
             <% if (typeof search !== 'undefined' && search.trim() !== '') { %>
                 <span class="badge bg-primary fs-6 d-inline-flex align-items-center gap-1">
                     Search: "<%= search %>"
-                    <a href="/products?category=<%= selectedCategory %>&sort=<%= selectedSort %>" class="text-white text-decoration-none ms-1" title="Remove search filter">&times;</a>
+                    <a href="/products?category=<%= selectedCategory %>&sort=<%= selectedSort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>" class="text-white text-decoration-none ms-1" title="Remove search filter">&times;</a>
                 </span>
             <% } %>
 
             <% if (typeof selectedCategory !== 'undefined' && selectedCategory.trim() !== '') { %>
                 <span class="badge bg-secondary fs-6 d-inline-flex align-items-center gap-1 text-capitalize">
                     Category: <%= selectedCategory %>
-                    <a href="/products?search=<%= search %>&sort=<%= selectedSort %>" class="text-white text-decoration-none ms-1" title="Remove category filter">&times;</a>
+                    <a href="/products?search=<%= search %>&sort=<%= selectedSort %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>" class="text-white text-decoration-none ms-1" title="Remove category filter">&times;</a>
+                </span>
+            <% } %>
+
+            <% if (typeof minPrice !== 'undefined' && minPrice !== '') { %>
+                <span class="badge bg-success fs-6 d-inline-flex align-items-center gap-1">
+                    Min Price: $<%= parseFloat(minPrice).toFixed(2) %>
+                    <a href="/products?search=<%= search %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&maxPrice=<%= maxPrice %>" class="text-white text-decoration-none ms-1" title="Remove min price">&times;</a>
+                </span>
+            <% } %>
+
+            <% if (typeof maxPrice !== 'undefined' && maxPrice !== '') { %>
+                <span class="badge bg-success fs-6 d-inline-flex align-items-center gap-1">
+                    Max Price: $<%= parseFloat(maxPrice).toFixed(2) %>
+                    <a href="/products?search=<%= search %>&category=<%= selectedCategory %>&sort=<%= selectedSort %>&minPrice=<%= minPrice %>" class="text-white text-decoration-none ms-1" title="Remove max price">&times;</a>
                 </span>
             <% } %>
 
             <% if (typeof selectedSort !== 'undefined' && selectedSort.trim() !== '') { %>
                 <span class="badge bg-info text-dark fs-6 d-inline-flex align-items-center gap-1">
                     Sort: <%= selectedSort === 'price_asc' ? 'Price: Low to High' : (selectedSort === 'price_desc' ? 'Price: High to Low' : 'Newest') %>
-                    <a href="/products?search=<%= search %>&category=<%= selectedCategory %>" class="text-dark text-decoration-none ms-1" title="Remove sort filter">&times;</a>
+                    <a href="/products?search=<%= search %>&category=<%= selectedCategory %>&minPrice=<%= minPrice %>&maxPrice=<%= maxPrice %>" class="text-dark text-decoration-none ms-1" title="Remove sort filter">&times;</a>
                 </span>
             <% } %>
 
-            <% if ((typeof search !== 'undefined' && search.trim() !== '') || (typeof selectedCategory !== 'undefined' && selectedCategory.trim() !== '') || (typeof selectedSort !== 'undefined' && selectedSort.trim() !== '')) { %>
+            <% if ((typeof search !== 'undefined' && search.trim() !== '') || (typeof selectedCategory !== 'undefined' && selectedCategory.trim() !== '') || (typeof selectedSort !== 'undefined' && selectedSort.trim() !== '') || (typeof minPrice !== 'undefined' && minPrice !== '') || (typeof maxPrice !== 'undefined' && maxPrice !== '')) { %>
                 <a href="/products" class="btn btn-sm btn-link text-danger p-0 text-decoration-none fw-semibold">Clear All</a>
             <% } %>
         </div>
@@ -121,7 +147,7 @@
         <div class="text-center py-5">
             <div class="alert alert-warning py-4 shadow-sm">
                 <h5 class="fw-bold">No products found matching your request.</h5>
-                <p class="mb-0 text-muted">Try adjusting your search terms or selecting a different category filter.</p>
+                <p class="mb-0 text-muted">Try adjusting your search terms, price range, or category filter.</p>
                 <a href="/products" class="btn btn-sm btn-primary mt-3">View All Products</a>
             </div>
         </div>
@@ -190,7 +216,6 @@
     const resultsCountEl = document.getElementById('resultsCount');
     const resultsTextEl = document.getElementById('resultsText');
 
-    // Save original title text into HTML dataset to allow safe highlighting & resetting
     productCols.forEach(col => {
       const titleEl = col.querySelector('.product-title');
       if (titleEl) {
@@ -205,7 +230,6 @@
         let visibleCount = 0;
 
         if (lowerQuery === '') {
-          // Restore original titles, show all cards
           productCols.forEach(col => {
             col.classList.remove('d-none');
             const titleEl = col.querySelector('.product-title');
@@ -221,12 +245,9 @@
         }
 
         const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 0);
-        
-        // Sequential Search Pattern
         const pattern = queryWords.map(word => `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).join('.*');
         const searchRegex = new RegExp(pattern, 'i');
 
-        // Highlighting Pattern
         const highlightPattern = queryWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
         const highlightRegex = new RegExp(`(${highlightPattern})`, 'gi');
 
@@ -239,7 +260,6 @@
             col.classList.remove('d-none');
             visibleCount++;
 
-            // Apply yellow highlight tag to matching words
             if (titleEl && highlightPattern) {
               titleEl.innerHTML = originalText.replace(
                 highlightRegex, 
@@ -254,11 +274,9 @@
           }
         });
 
-        // Update live counter
         if (resultsCountEl) resultsCountEl.textContent = visibleCount;
         if (resultsTextEl) resultsTextEl.textContent = visibleCount === 1 ? 'product found' : 'products found';
 
-        // Toggle empty alert
         if (visibleCount === 0 && productCols.length > 0) {
           if (noLiveResults) noLiveResults.classList.remove('d-none');
         } else {
@@ -266,7 +284,6 @@
         }
       });
 
-      // Run live highlighting automatically if input was pre-filled on load
       if (liveInput.value.trim() !== '') {
         liveInput.dispatchEvent(new Event('input'));
       }
