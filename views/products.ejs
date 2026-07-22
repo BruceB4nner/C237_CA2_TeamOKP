@@ -53,7 +53,7 @@
                 </select>
             </div>
 
-            <!-- Price Range Inputs (Min & Max Price) -->
+            <!-- Price Range Inputs -->
             <div class="col-lg-3 col-md-6">
                 <div class="input-group">
                     <span class="input-group-text bg-white">$</span>
@@ -90,7 +90,7 @@
             <span id="resultsText">product<%= products.length === 1 ? '' : 's' %> found</span>
         </div>
 
-        <!-- Filter Chips / Badges Container -->
+        <!-- Filter Chips Container -->
         <div class="d-flex flex-wrap gap-2 align-items-center" id="activeBadgesContainer">
             <% if (typeof search !== 'undefined' && search.trim() !== '') { %>
                 <span class="badge bg-primary fs-6 d-inline-flex align-items-center gap-1">
@@ -163,21 +163,40 @@
                                 style="height:180px; object-fit:cover;" 
                                 alt="<%= product.productName %>"
                             >
-                            <div class="card-body text-center d-flex flex-column">
+                            <div class="card-body text-center d-flex flex-column pb-1">
                                 <% if (product.category) { %>
                                     <span class="badge bg-secondary mb-2 text-capitalize align-self-center"><%= product.category %></span>
                                 <% } %>
                                 <h5 class="card-title h6 fw-bold mb-1 product-title"><%= product.productName %></h5>
                                 <p class="card-text text-danger fw-bold fs-5 my-1">$<%= parseFloat(product.price).toFixed(2) %></p>
-                                <p class="card-text"><small class="text-muted">Stock: <%= product.stock %></small></p>
+                                <p class="card-text mb-2"><small class="text-muted">Stock: <%= product.stock %></small></p>
 
                                 <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                                    <form action="/products/delete/<%= product.productId %>" method="POST" class="mt-auto">
-                                        <button type="submit" class="btn btn-danger btn-sm w-100 mt-2" onclick="return confirm('Admin: Delete this item?')">Delete (Admin)</button>
+                                    <form action="/products/delete/<%= product.productId %>" method="POST" class="mt-auto mb-2">
+                                        <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Admin: Delete this item?')">Delete (Admin)</button>
                                     </form>
                                 <% } %>
                             </div>
                         </a>
+
+                        <!-- NEW: Quick View Action Button -->
+                        <div class="px-3 pb-3 pt-0">
+                            <button 
+                                type="button" 
+                                class="btn btn-outline-primary btn-sm w-100 fw-semibold" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#quickViewModal"
+                                data-name="<%= product.productName %>"
+                                data-price="<%= parseFloat(product.price).toFixed(2) %>"
+                                data-category="<%= product.category || 'others' %>"
+                                data-image="<%= product.image || 'https://via.placeholder.com/300x180?text=No+Image' %>"
+                                data-stock="<%= product.stock %>"
+                                data-description="<%= product.description || 'No detailed description available for this product.' %>"
+                                data-id="<%= product.productId %>"
+                            >
+                                👁️ Quick View
+                            </button>
+                        </div>
 
                         <% if (typeof user !== 'undefined' && user && user.userId == product.userId) { %>
                             <div class="card-footer bg-light d-flex justify-content-between align-items-center">
@@ -202,14 +221,76 @@
 
 </div>
 
+<!-- NING XIN: Quick View Product Bootstrap Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="quickViewModalLabel">Product Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-5 text-center">
+                        <img id="qvImage" src="" class="img-fluid rounded shadow-sm w-100" style="max-height: 280px; object-fit: cover;" alt="Product Image">
+                    </div>
+                    <div class="col-md-7">
+                        <span id="qvCategory" class="badge bg-secondary text-capitalize mb-2">Category</span>
+                        <h3 id="qvName" class="fw-bold mb-2">Product Name</h3>
+                        <h4 id="qvPrice" class="text-danger fw-bold my-2">$0.00</h4>
+                        <p id="qvStock" class="text-muted small mb-3">Stock: 0</p>
+                        <p id="qvDescription" class="text-secondary small bg-light p-3 rounded">Description goes here...</p>
+                        <hr>
+                        <div class="d-flex gap-2">
+                            <a id="qvFullDetailsBtn" href="#" class="btn btn-primary fw-semibold flex-grow-1">View Details Page</a>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <br>
 <%- include('partials/footer.ejs') %>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- NING XIN: In-Order Live Search + Dynamic Counter + Real-Time Text Highlighting Script -->
+<!-- NING XIN: In-Order Live Search + Dynamic Counter + Real-Time Text Highlighting + Quick View Modal Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // ==========================================
+    // 1. QUICK VIEW MODAL POPULATION SCRIPT
+    // ==========================================
+    const quickViewModal = document.getElementById('quickViewModal');
+    if (quickViewModal) {
+      quickViewModal.addEventListener('show.bs.modal', (event) => {
+        const button = event.relatedTarget;
+        if (!button) return;
+
+        const name = button.getAttribute('data-name');
+        const price = button.getAttribute('data-price');
+        const category = button.getAttribute('data-category');
+        const image = button.getAttribute('data-image');
+        const stock = button.getAttribute('data-stock');
+        const description = button.getAttribute('data-description');
+        const id = button.getAttribute('data-id');
+
+        document.getElementById('qvName').textContent = name;
+        document.getElementById('qvPrice').textContent = '$' + price;
+        document.getElementById('qvCategory').textContent = category;
+        document.getElementById('qvImage').src = image;
+        document.getElementById('qvImage').alt = name;
+        document.getElementById('qvStock').textContent = 'Stock: ' + stock + ' available';
+        document.getElementById('qvDescription').textContent = description;
+        document.getElementById('qvFullDetailsBtn').href = '/products/' + id;
+      });
+    }
+
+    // ==========================================
+    // 2. LIVE SEARCH & HIGHLIGHTING SCRIPT
+    // ==========================================
     const liveInput = document.getElementById('liveSearchInput');
     const productCols = document.querySelectorAll('.product-card-col');
     const noLiveResults = document.getElementById('noLiveResults');
