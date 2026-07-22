@@ -7,7 +7,7 @@ const flash = require('connect-flash');
 
 // Multer Storage Setup
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, 'public/images') },
+    destination: (req, file, cb) => { cb(null, 'public/images'); },
     filename: (req, file, cb) => { cb(null, file.originalname); }
 });
 const upload = multer({ storage: storage });
@@ -43,8 +43,7 @@ app.use(session({
     secret: 'someSecretKeyChangeMe',
     resave: false,
     saveUninitialized: true,
-    // Session expires after 1 week of inactivity
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 1 week session
 }));
 app.use(flash());
 
@@ -75,35 +74,6 @@ function isAdmin(req, res, next) {
     res.status(403).send('Forbidden: Admins only');
 }
 
-    // Shuffle results for randomness
-    const shuffled = results.sort(() => 0.5 - Math.random());
-
-    res.render('index', {
-      user: req.session.user,
-      messages: req.flash('success'),
-      products: shuffled
-    });
-  });
-});
-
-
-app.get('/products', (req, res) => {
-    const search = req.query.search || '';
-    const sql = 'SELECT * FROM products WHERE productName LIKE ? AND stock > 0';
-    connection.query(sql, [`%${search}%`], (err, results) => {
-        if (err) throw err;
-        res.render('products', { products: results, search: search, user: req.session.user });
-    });
-});
-
-//HI GUYS I MADE THE REGISTER ROUTE
-
-//Register GET Route (Josh)
-app.get('/register', (req, res) => {
-    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
-});
-
-//validateRegistration (Josh)
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
@@ -116,7 +86,6 @@ const validateRegistration = (req, res, next) => {
     }
     next();
 };
-
 
 // ==========================================
 // NING XIN: HOMEPAGE ROUTE (Carousel + Reviews + Categories)
@@ -137,10 +106,8 @@ app.get('/', (req, res) => {
             products = [];
         }
 
-        // Fetch homepage customer reviews
         connection.query(sqlReviews, (err, reviews) => {
             if (err) {
-                // If reviews table does not exist yet, fallback gracefully
                 reviews = [];
             }
 
@@ -154,8 +121,6 @@ app.get('/', (req, res) => {
         });
     });
 });
-
-
 
 // ==========================================
 // NING XIN: PRODUCT VIEWING, SEARCHING & CATEGORY FILTERING
@@ -199,7 +164,6 @@ app.get('/products', (req, res) => {
 // AUTHENTICATION ROUTES (Josh)
 // ==========================================
 
-// Register Routes
 app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
@@ -215,7 +179,6 @@ app.post('/register', validateRegistration, (req, res) => {
     });
 });
 
-// Login Routes
 app.get('/login', (req, res) => {
     res.render('login', {
         messages: req.flash('success'),
@@ -246,7 +209,6 @@ app.post('/login', (req, res) => {
     });
 });
 
-// Logout Route
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) return res.redirect('/');
@@ -254,12 +216,10 @@ app.get('/logout', (req, res) => {
     });
 });
 
-
 // ==========================================
 // PRODUCT DETAILS & MANAGEMENT
 // ==========================================
 
-// View Product Details (Josh / Myiesha)
 app.get('/products/:id', (req, res) => {
     const productId = req.params.id;
     const sql = 'SELECT * FROM products WHERE productId = ?';
@@ -276,7 +236,6 @@ app.get('/products/:id', (req, res) => {
     });
 });
 
-// Add Product Routes (Myiesha)
 app.get('/addProduct', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -311,7 +270,6 @@ app.post('/addProduct', (req, res) => {
     );
 });
 
-// Delete Product Route (Kai Peng / Admin)
 app.post('/products/delete/:id', (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Forbidden: Admins only');
@@ -325,14 +283,12 @@ app.post('/products/delete/:id', (req, res) => {
     });
 });
 
-// Individual Member Test Routes
-app.get('/angie', (req, res) => { res.render('angie') });
-app.get('/josh', (req, res) => { res.render('josh') });
-app.get('/kp', (req, res) => { res.render('kaipeng') });
-app.get('/myiesha', (req, res) => { res.render('myiesha') });
-app.get('/nx', (req, res) => { res.render('ningxin') });
+app.get('/angie', (req, res) => { res.render('angie'); });
+app.get('/josh', (req, res) => { res.render('josh'); });
+app.get('/kp', (req, res) => { res.render('kaipeng'); });
+app.get('/myiesha', (req, res) => { res.render('myiesha'); });
+app.get('/nx', (req, res) => { res.render('ningxin'); });
 
-// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
