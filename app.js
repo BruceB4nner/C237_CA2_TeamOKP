@@ -11,13 +11,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-//sql connectionm (use the teachers azure lab connection)
 const connection = mysql.createConnection({
     host: 'c237-eaint-mysql.mysql.database.azure.com',
     user: 'c237_029',
     password: 'c237029@2026!',
     database: 'c237_029_teamongkaipeng',
-    //tells exp serv to only allow a secure, encrypted connection to the onlien azure db
     ssl: { rejectUnauthorized: true }
 });
 connection.connect((err) => {
@@ -28,34 +26,56 @@ connection.connect((err) => {
     console.log('Connected to MySQL database');
 });
 
-// Set up view engine
 app.set('view engine', 'ejs');
-
-// enable static files
 app.use(express.static('public'));
-
-// enable form processing
 app.use(express.urlencoded({ extended: false }));
 
-// session + flash - required for req.session and req.flash to work at all
 app.use(session({
-    secret: 'someSecretKeyChangeMe', // any random string, just signs the cookie
+    secret: 'someSecretKeyChangeMe',
     resave: false,
     saveUninitialized: true,
-    // Session expires after 1 week of inactivity
     cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
 }));
 app.use(flash());
 
-//Middleware to track session
 app.use((req, res, next) => {
     res.locals.user = req.session.user;
     next();
 });
 
+// Only lets the request through if logged-in user owns this product, or is an admin
+function isOwnerOrAdmin(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  const productId = req.params.id;
+  const sql = 'SELECT * FROM products WHERE productId = ?';
+
+  connection.query(sql, [productId], (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).send('Server error');
+    }
+    if (results.length === 0) {
+      return res.status(404).send('Product not found');
+    }
+
+    const product = results[0];
+    const isOwner = product.userId === req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+
+    if (!isOwner && !isAdminUser) {
+      return res.status(403).send('Forbidden: You can only edit or delete your own products');
+    }
+
+    req.product = product;
+    next();
+  });
+}
+
 //routes go HEREEEEEEEEEEEE (add all codes below this to prevent override)
 
-//Main Page "/" Route
 app.get('/', (req, res) => {
   const sql = 'SELECT * FROM products WHERE stock > 0';
 
@@ -65,11 +85,10 @@ app.get('/', (req, res) => {
       return res.render('index', {
         user: req.session.user,
         messages: req.flash('success'),
-        products: [] // fallback
+        products: []
       });
     }
 
-    // Shuffle results for randomness
     const shuffled = results.sort(() => 0.5 - Math.random());
 
     res.render('index', {
@@ -80,7 +99,6 @@ app.get('/', (req, res) => {
   });
 });
 
-
 app.get('/products', (req, res) => {
     const search = req.query.search || '';
     const sql = 'SELECT * FROM products WHERE productName LIKE ? AND stock > 0';
@@ -90,14 +108,10 @@ app.get('/products', (req, res) => {
     });
 });
 
-//HI GUYS I MADE THE REGISTER ROUTE
-
-//Register GET Route (Josh)
 app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
 
-//validateRegistration (Josh)
 const validateRegistration = (req, res, next) => {
     const { username, email, password, address, contact } = req.body;
     if (!username || !email || !password || !address || !contact) {
@@ -108,12 +122,8 @@ const validateRegistration = (req, res, next) => {
         req.flash('formData', req.body);
         return res.redirect('/register');
     }
-    //If all validations pass, the next function is called, allowing the request to proceed to the 
-    //next middleware function or route handler.
     next();
 };
-
-//isAdmin funciton 
 
 function isAdmin(req, res, next) {
   if (req.session.user && req.session.user.role === 'admin') {
@@ -122,8 +132,6 @@ function isAdmin(req, res, next) {
   res.status(403).send('Forbidden: Admins only');
 }
 
-
-//POST Route + Regsitration Validation(Josh)
 app.post('/register', validateRegistration, (req, res) => {
     const { username, email, password, address, contact, role } = req.body;
 
@@ -143,7 +151,6 @@ app.get('/kp',(req,res)=>{res.render('kaipeng')})
 app.get('/myiesha',(req,res)=>{res.render('myiesha')})
 app.get('/nx',(req,res)=>{res.render('ningxin')})
 
-//Login Route Starts here (Josh)
 app.get('/login', (req, res) => {
     res.render('login', {
         messages: req.flash('success'),
@@ -154,7 +161,6 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
 
-    // Validate email and password
     if (!email || !password) {
         req.flash('error', 'All fields are required.');
         return res.redirect('/login');
@@ -167,33 +173,25 @@ app.post('/login', (req, res) => {
         }
 
         if (results.length > 0) {
-            // Successful login
-            req.session.user = results[0]; // store user in session
+            req.session.user = results[0];
             req.flash('success', 'Login successful!');
-            //******** TO DO: Update to redirect users to /dashboard route upon successful log in ********//
             res.redirect('/');
         } else {
-            // Invalid credentials
             req.flash('error', 'Invalid email or password.');
             res.redirect('/login');
         }
     });
 });
 
-//Log Out Route(Josh)
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            return res.redirect('/'); // fallback if session can't be destroyed
+            return res.redirect('/');
         }
-        res.redirect('/'); // send them back to login page
+        res.redirect('/');
     });
 });
 
-
-
-
-//View Product (Josh)
 app.get('/products/:id', (req, res) => {
   const productId = req.params.id;
   const sql = 'SELECT * FROM products WHERE productId = ?';
@@ -210,12 +208,6 @@ app.get('/products/:id', (req, res) => {
   });
 });
 
-
-
-
-
-// add product route (myiesha)
-// get route
 app.get('/addProduct', (req, res) => {
 
     if (!req.session.user) {
@@ -228,7 +220,6 @@ app.get('/addProduct', (req, res) => {
 
 });
 
-// post route
 app.post('/addProduct', (req, res) => {
 
     if (!req.session.user) {
@@ -244,7 +235,7 @@ app.post('/addProduct', (req, res) => {
         image
     } = req.body;
 
-const userId = req.session.user.userId;
+const userId = req.session.user.id;
 
 const sql = `
     INSERT INTO products
@@ -274,11 +265,31 @@ const sql = `
 
 });
 
-app.post('/products/delete/:id', (req, res) => {
-  if (!req.session.user || req.session.user.role !== 'admin') {
-    return res.status(403).send('Forbidden: Admins only');
-  }
+app.get('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
+  res.render('editProduct', { product: req.product, user: req.session.user });
+});
 
+app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
+  const productId = req.params.id;
+  const { productName, category, description, quantity, price, image, stock } = req.body;
+
+  const sql = `
+    UPDATE products
+    SET productName = ?, category = ?, description = ?, quantity = ?, price = ?, image = ?, stock = ?
+    WHERE productId = ?
+  `;
+
+  connection.query(sql, [productName, category, description, quantity, price, image, stock, productId], (err) => {
+    if (err) {
+      console.error('Error updating product:', err);
+      return res.send('Error updating product');
+    }
+    req.flash('success', 'Product updated successfully');
+    res.redirect('/products');
+  });
+});
+
+app.post('/products/delete/:id', isOwnerOrAdmin, (req, res) => {
   const productId = req.params.id;
   connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
     if (err) throw err;
