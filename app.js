@@ -58,12 +58,22 @@ app.get('/', (req, res) => {
 });
 
 app.get('/products', (req, res) => {
-  const search = req.query.search || '';
-  const sql = 'SELECT * FROM products WHERE name LIKE ? AND stock > 0';
-  connection.query('SELECT * FROM products WHERE stock > 0', (err, results) => {
-    if (err) throw err;
-    res.render('products', { products: results, search: search , user: req.session.user});
-  });
+    const search = req.query.search || '';
+
+    connection.query(
+        'SELECT * FROM products WHERE stock > 0',
+        (err, results) => {
+
+            if (err) throw err;
+
+            res.render('products', {
+                products: results,
+                search: search,
+                user: req.session.user
+            });
+
+        }
+    );
 });
 
 //HI GUYS I MADE THE REGISTER ROUTE
