@@ -99,8 +99,8 @@
     <div class="bg-light p-3 rounded shadow-sm mb-3">
         <form method="GET" action="/products" class="row g-2 align-items-center" id="searchForm">
             
-            <!-- Instant Live Search Input -->
-            <div class="col-lg-3 col-md-6">
+            <!-- Instant Live Search Input & Recent History Container -->
+            <div class="col-lg-3 col-md-6 position-relative">
                 <input 
                     type="text" 
                     id="liveSearchInput"
@@ -110,6 +110,8 @@
                     placeholder="⚡ Search products..."
                     autocomplete="off"
                 >
+                <!-- Recent Searches Chips Container -->
+                <div id="recentSearchesContainer" class="d-none"></div>
             </div>
 
             <!-- Category Dropdown Filter -->
@@ -360,7 +362,9 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
 
-    // 1. Grid vs List View Toggle Script
+    // ==========================================
+    // 1. GRID VS LIST VIEW TOGGLE SCRIPT
+    // ==========================================
     const gridViewBtn = document.getElementById('gridViewBtn');
     const listViewBtn = document.getElementById('listViewBtn');
     const productGrid = document.getElementById('productGrid');
@@ -385,7 +389,9 @@
       }
     }
 
-    // 2. Quick View Modal Script
+    // ==========================================
+    // 2. QUICK VIEW MODAL SCRIPT
+    // ==========================================
     const quickViewModal = document.getElementById('quickViewModal');
     if (quickViewModal) {
       quickViewModal.addEventListener('show.bs.modal', (event) => {
@@ -403,7 +409,9 @@
       });
     }
 
-    // 3. Live Search & Text Highlighting Script
+    // ==========================================
+    // 3. LIVE SEARCH & TEXT HIGHLIGHTING SCRIPT
+    // ==========================================
     const liveInput = document.getElementById('liveSearchInput');
     const productCols = document.querySelectorAll('.product-card-col');
     const noLiveResults = document.getElementById('noLiveResults');
@@ -482,6 +490,105 @@
         liveInput.dispatchEvent(new Event('input'));
       }
     }
+
+    // ==========================================
+    // 4. NING XIN: LOCALSTORAGE RECENT SEARCHES SCRIPT
+    // ==========================================
+    const RECENT_KEY = 'okp_recent_searches';
+    const recentContainer = document.getElementById('recentSearchesContainer');
+    const searchForm = document.getElementById('searchForm');
+
+    function getRecentSearches() {
+      try {
+        return JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveSearchTerm(term) {
+      if (!term || term.trim().length < 2) return;
+      let searches = getRecentSearches();
+      const cleanTerm = term.trim().toLowerCase();
+      // Remove duplicate if already exists
+      searches = searches.filter(s => s !== cleanTerm);
+      // Prepend to front
+      searches.unshift(cleanTerm);
+      // Limit to 5 max
+      searches = searches.slice(0, 5);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(searches));
+      renderRecentSearches();
+    }
+
+    function removeSearchTerm(term) {
+      let searches = getRecentSearches();
+      searches = searches.filter(s => s !== term);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(searches));
+      renderRecentSearches();
+    }
+
+    function renderRecentSearches() {
+      if (!recentContainer) return;
+      const searches = getRecentSearches();
+
+      if (searches.length === 0) {
+        recentContainer.innerHTML = '';
+        recentContainer.classList.add('d-none');
+        return;
+      }
+
+      let html = '<div class="d-flex align-items-center flex-wrap gap-1 mt-1"><small class="text-muted me-1 fw-semibold">Recent:</small>';
+      searches.forEach(term => {
+        html += `
+          <span class="badge bg-white text-dark border shadow-sm d-inline-flex align-items-center gap-1 py-1 px-2">
+            <span class="recent-chip-text" style="cursor: pointer;" title="Search '${term}'">${term}</span>
+            <span class="text-danger ms-1 remove-recent-chip fw-bold" style="cursor: pointer;" data-term="${term}" title="Delete">&times;</span>
+          </span>
+        `;
+      });
+      html += '</div>';
+
+      recentContainer.innerHTML = html;
+      recentContainer.classList.remove('d-none');
+
+      // Chip click event -> populates input and triggers live filter
+      recentContainer.querySelectorAll('.recent-chip-text').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          const term = e.target.textContent;
+          if (liveInput) {
+            liveInput.value = term;
+            liveInput.dispatchEvent(new Event('input'));
+          }
+        });
+      });
+
+      // Remove button click event -> deletes from localStorage
+      recentContainer.querySelectorAll('.remove-recent-chip').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const term = btn.getAttribute('data-term');
+          removeSearchTerm(term);
+        });
+      });
+    }
+
+    // Save term on Form Submit
+    if (searchForm) {
+      searchForm.addEventListener('submit', () => {
+        if (liveInput && liveInput.value.trim() !== '') {
+          saveSearchTerm(liveInput.value);
+        }
+      });
+    }
+
+    // Save active server query on page load if present
+    const serverQuery = "<%= searchVal %>".trim();
+    if (serverQuery !== '') {
+      saveSearchTerm(serverQuery);
+    } else {
+      renderRecentSearches();
+    }
+
   });
 </script>
 </body>
