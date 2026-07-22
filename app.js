@@ -41,7 +41,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(session({
     secret: 'someSecretKeyChangeMe', // any random string, just signs the cookie
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    // Session expires after 1 week of inactivity
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
 }));
 app.use(flash());
 
@@ -81,23 +83,14 @@ app.get('/', (req, res) => {
 
 app.get('/products', (req, res) => {
     const search = req.query.search || '';
-    const sql = 'SELECT * FROM products WHERE name LIKE ? AND stock > 0';
-    connection.query('SELECT * FROM products WHERE stock > 0', (err, results) => {
+    const sql = 'SELECT * FROM products WHERE productName LIKE ? AND stock > 0';
+    connection.query(sql, [`%${search}%`], (err, results) => {
         if (err) throw err;
         res.render('products', { products: results, search: search, user: req.session.user });
     });
 });
 
 //HI GUYS I MADE THE REGISTER ROUTE
-//Register Session MiddleWare(Josh)
-app.use(session({
-    secret: 'secret',
-    resave: false,
-    saveUninitialized: true,
-    // Session expires after 1 week of inactivity
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
-
-}));
 
 //Register GET Route (Josh)
 app.get('/register', (req, res) => {
