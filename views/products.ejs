@@ -136,7 +136,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- NING XIN: Instant Live Search Client-Side Script -->
+<!-- NING XIN: In-Order Live Search Client-Side Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const liveInput = document.getElementById('liveSearchInput');
@@ -145,13 +145,29 @@
 
     if (liveInput) {
       liveInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
+        const rawQuery = this.value.toLowerCase().trim();
         let visibleCount = 0;
+
+        // If input is empty, show all products
+        if (rawQuery === '') {
+          productCols.forEach(col => col.classList.remove('d-none'));
+          if (noLiveResults) noLiveResults.classList.add('d-none');
+          return;
+        }
+
+        // Split search input by spaces into separate words
+        const queryWords = rawQuery.split(/\s+/);
+
+        // Build a sequential Regular Expression (e.g., "pan" -> "\bpan", "pan ring" -> "\bpan.*\bring")
+        // \b ensures matching starts from the beginning of words in exact left-to-right order
+        const pattern = queryWords.map(word => `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).join('.*');
+        const searchRegex = new RegExp(pattern, 'i');
 
         productCols.forEach(col => {
           const productName = col.getAttribute('data-name') || '';
-          
-          if (productName.includes(query)) {
+
+          // Check if the product name matches words in sequential order
+          if (searchRegex.test(productName)) {
             col.classList.remove('d-none'); // Show card
             visibleCount++;
           } else {
@@ -159,7 +175,7 @@
           }
         });
 
-        // Toggle "No matches" alert if everything is filtered out
+        // Toggle "No matches" alert if all cards are hidden
         if (visibleCount === 0 && productCols.length > 0) {
           noLiveResults.classList.remove('d-none');
         } else {
@@ -169,5 +185,6 @@
     }
   });
 </script>
+
 </body>
 </html>
