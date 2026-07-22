@@ -37,15 +37,17 @@
             Categories
           </a>
           <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-            <li><a class="dropdown-item" href="/toys & collectibles">Toys & Collectibles</a></li>
-            <li><a class="dropdown-item" href="/computers & tech">Computers & Tech</a></li>
-            <li><a class="dropdown-item" href="/women's fashion">Women's Fashion</a></li>
-            <li><a class="dropdown-item" href="/men's fashion">Men's Fashion</a></li>
-            <li><a class="dropdown-item" href="/video gaming">Video Gaming</a></li>
-            <li><a class="dropdown-item" href="/furniture & home living">Furniture & Home Living</a></li>
-            <li><a class="dropdown-item" href="/health & nutrition">Health & Nutrition</a></li>
-            <li><a class="dropdown-item" href="/tickets & vouchers">Tickets & Vouchers</a></li>
-            <li><a class="dropdown-item" href="/others">Others</a></li>
+<li><a class="dropdown-item" href="/toys-collectibles">Toys & Collectibles</a></li>
+<li><a class="dropdown-item" href="/computers-tech">Computers & Tech</a></li>
+<li><a class="dropdown-item" href="/womens-fashion">Women's Fashion</a></li>
+<li><a class="dropdown-item" href="/mens-fashion">Men's Fashion</a></li>
+<li><a class="dropdown-item" href="/video-gaming">Video Gaming</a></li>
+<li><a class="dropdown-item" href="/furniture-home">Furniture & Home Living</a></li>
+<li><a class="dropdown-item" href="/health-nutrition">Health & Nutrition</a></li>
+<li><a class="dropdown-item" href="/tickets-vouchers">Tickets & Vouchers</a></li>
+<li><a class="dropdown-item" href="/others">Others</a></li>
+
+
           </ul>
         </li>
 
@@ -54,16 +56,27 @@
 
         <!-- User Login/Logout -->
         <% if (user) { %>
-          <li class="nav-item"><span class="nav-link text-white">Hi, <%= user.username %></span></li>
-          <li class="nav-item"><a class="nav-link" href="/logout">Sign Out</a></li>
-        <% } else { %>
-          <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
-        <% } %>
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button"
+       data-bs-toggle="dropdown" aria-expanded="false">
+      Hi, <%= user.username %>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+      <li><a class="dropdown-item" href="/profile">Profile</a></li>
+      <li><a class="dropdown-item" href="/orders">My Orders</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
+    </ul>
+  </li>
+<% } else { %>
+  <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
+<% } %>
+
 
       </ul>
     </div>
   </div>
 </nav>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

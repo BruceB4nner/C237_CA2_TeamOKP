@@ -9,6 +9,15 @@
 </head>
 
 <body>
+  <%- include ('partials/header.ejs')%>
+    <div class="container mt-4">
+      <form method="get" action="/products" class="d-flex mb-4">
+        <input type="text" class="form-control me-2" name="search" value="<%= search %>"
+          placeholder="Search products...">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
+
+<body>
 
 <div class="container mt-4">
 
@@ -33,99 +42,82 @@
         </button>
     </form>
 
-    <h2 class="mb-4">Product Catalog</h2>
+  <h2 class="mb-3">Product Catalog</h2>
 
-    <% if (products.length === 0) { %>
+  <% if (products.length === 0) { %>
 
-        <p>No products found.</p>
+      <p>No products found.</p>
 
-    <% } else { %>
+  <% } else { %>
 
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
 
-            <% products.forEach(product => { %>
+        <% products.forEach(product => { %>
 
-                <div class="col">
+          <div class="col">
 
-                    <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm">
 
-                        <img
-                            src="<%= product.image %>"
-                            class="card-img-top"
-                            style="height:200px; object-fit:cover;"
-                            alt="<%= product.productName %>">
+              <a href="/product/<%= product.productId %>" class="text-decoration-none text-dark">
 
-                        <div class="card-body">
+                <img
+                  src="<%= product.image %>"
+                  class="card-img-top"
+                  style="height:180px; object-fit:cover;"
+                  alt="<%= product.productName %>">
 
-                            <h5 class="card-title">
-                                <%= product.productName %>
-                            </h5>
+                <div class="card-body text-center">
 
-                            <p class="card-text">
-                                <strong>Price:</strong>
-                                $<%= product.price %>
-                            </p>
+                  <h5 class="card-title">
+                    <%= product.productName %>
+                  </h5>
 
-                            <p class="card-text">
-                                <strong>Category:</strong>
-                                <%= product.category %>
-                            </p>
+                  <p class="card-text">
+                    $<%= product.price %>
+                  </p>
 
-                            <% if (product.description) { %>
-                                <p class="card-text">
-                                    <%= product.description %>
-                                </p>
-                            <% } %>
+                  <p class="card-text">
+                    Category: <%= product.category %>
+                  </p>
 
-                            <p class="card-text">
-                                <strong>Quantity:</strong>
-                                <%= product.quantity %>
-                            </p>
-
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    Stock: <%= product.stock %>
-                                </small>
-                            </p>
-
-                        </div>
-
-                        <!-- ONLY OWNER CAN SEE THESE BUTTONS -->
-                        <% if (user && user.userId == product.userId) { %>
-
-                            <div class="card-footer d-flex justify-content-between">
-
-                                <a href="/editProduct/<%= product.productId %>"
-                                   class="btn btn-warning btn-sm">
-                                    Edit
-                                </a>
-
-                                <form action="/products/delete/<%= product.productId %>" method="POST">
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Delete this listing?')">
-                                        Delete
-                                    </button>
-
-                                </form>
-
-                            </div>
-
-                        <% } %>
-
-                    </div>
+                  <p class="card-text">
+                    <small class="text-muted">
+                      Stock: <%= product.stock %>
+                    </small>
+                  </p>
 
                 </div>
 
-            <% }) %>
+              </a>
 
-        </div>
+              <!-- Only owner can edit/delete -->
+              <% if (user && user.userId === product.userId) { %>
 
-    <% } %>
+                <div class="card-footer d-flex justify-content-between">
 
-</div>
+                  <a href="/editProduct/<%= product.productId %>" class="btn btn-warning btn-sm">
+                    Edit
+                  </a>
 
+                  <a href="/deleteProduct/<%= product.productId %>" class="btn btn-danger btn-sm">
+                    Delete
+                  </a>
+
+                </div>
+
+              <% } %>
+
+            </div>
+
+          </div>
+
+        <% }) %>
+
+      </div>
+
+  <% } %>
+
+<%- include('partials/footer.ejs') %>
 </body>
+
 </html>
