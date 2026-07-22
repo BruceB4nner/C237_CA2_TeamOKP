@@ -166,10 +166,12 @@ app.get('/logout', (req, res) => {
 });
 
 // add product route (myiesha)
+// get route
 app.get('/addProduct', (req, res) => {
     res.render('addProducts');
 });
 
+// post route
 app.post('/addProduct', (req, res) => {
 
     const {
