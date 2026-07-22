@@ -153,12 +153,14 @@ app.get('/', (req, res) => {
 });
 
 // ==========================================
-// NING XIN: PRODUCT VIEWING, SEARCHING, CATEGORY FILTERING & SORTING
+// NING XIN: PRODUCT VIEWING, SEARCHING, CATEGORY FILTERING, SORTING & PRICE RANGE
 // ==========================================
 app.get('/products', (req, res) => {
     const search = req.query.search || '';
     const category = req.query.category || '';
     const sort = req.query.sort || '';
+    const minPrice = req.query.minPrice || '';
+    const maxPrice = req.query.maxPrice || '';
 
     let sql = 'SELECT * FROM products WHERE 1=1';
     let queryParams = [];
@@ -173,6 +175,18 @@ app.get('/products', (req, res) => {
     if (category.trim() !== '') {
         sql += ' AND category = ?';
         queryParams.push(category.trim());
+    }
+
+    // Filter by Minimum Price
+    if (minPrice !== '' && !isNaN(minPrice)) {
+        sql += ' AND price >= ?';
+        queryParams.push(parseFloat(minPrice));
+    }
+
+    // Filter by Maximum Price
+    if (maxPrice !== '' && !isNaN(maxPrice)) {
+        sql += ' AND price <= ?';
+        queryParams.push(parseFloat(maxPrice));
     }
 
     // Dynamic SQL Sorting Logic
@@ -194,7 +208,9 @@ app.get('/products', (req, res) => {
             products: results,
             search: search,
             selectedCategory: category,
-            selectedSort: sort, // Passed active sort selection to view
+            selectedSort: sort,
+            minPrice: minPrice,
+            maxPrice: maxPrice,
             categories: CATEGORIES,
             user: req.session.user
         });
