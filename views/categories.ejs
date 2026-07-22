@@ -1,0 +1,12 @@
+<h1><%= category.replace('-', ' ') %></h1>
+<p>Showing products for <%= category.replace('-', ' ') %></p>
+
+<ul>
+  <% if (products.length > 0) { %>
+    <% products.forEach(product => { %>
+      <li><%= product.name %> - $<%= product.price %></li>
+    <% }) %>
+  <% } else { %>
+    <li>No products found in this category.</li>
+  <% } %>
+</ul>
