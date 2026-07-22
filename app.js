@@ -41,6 +41,12 @@ app.use(session({
 }));
 app.use(flash());
 
+//Middleware to track session
+app.use((req, res, next) => {
+  res.locals.user = req.session.user;
+  next();
+});
+
 //routes go HEREEEEEEEEEEEE (add all codes below this to prevent override)
 
 //Main Page "/" Route
@@ -106,6 +112,45 @@ app.post('/register', validateRegistration, (req, res) => {
         res.redirect('/login');
     });
 });
+
+//Login Route Starts here (Josh)
+app.get('/login', (req, res) => {
+    res.render('login', { 
+        messages: req.flash('success'), 
+        errors: req.flash('error') 
+    });
+});
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    // Validate email and password
+    if (!email || !password) {
+        req.flash('error', 'All fields are required.');
+        return res.redirect('/login');
+    }
+
+    const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA2(?,256)';
+    connection.query(sql, [email, password], (err, results) => {
+        if (err) {
+            throw err;
+        }
+
+        if (results.length > 0) {
+            // Successful login
+            req.session.user = results[0]; // store user in session
+            req.flash('success', 'Login successful!');
+            //******** TO DO: Update to redirect users to /dashboard route upon successful log in ********//
+            res.redirect('/index');
+        } else {
+            // Invalid credentials
+            req.flash('error', 'Invalid email or password.');
+            res.redirect('/login');
+        }
+    });
+});
+
+
 
 // all routes go above this port initializer please thank u :)
 const PORT = process.env.PORT || 3000;
