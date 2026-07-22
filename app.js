@@ -106,6 +106,11 @@ app.post('/register', validateRegistration, (req, res) => {
         res.redirect('/login');
     });
 });
+app.get('/angie',(req,res)=>{res.render('angie')})
+app.get('/josh',(req,res)=>{res.render('josh')})
+app.get('/kp',(req,res)=>{res.render('kaipeng')})
+app.get('/myiesha',(req,res)=>{res.render('myiesha')})
+app.get('/nx',(req,res)=>{res.render('ningxin')})
 
 // all routes go above this port initializer please thank u :)
 const PORT = process.env.PORT || 3000;
