@@ -165,6 +165,41 @@ app.get('/logout', (req, res) => {
   });
 });
 
+// add product route (myiesha)
+app.get('/addProduct', (req, res) => {
+    res.render('addProducts');
+});
+
+app.post('/addProduct', (req, res) => {
+
+    const {
+        productName,
+        category,
+        quantity,
+        price,
+        image
+    } = req.body;
+
+    const sql = `
+        INSERT INTO products
+        (productName, category, quantity, price, image, stock)
+        VALUES (?, ?, ?, ?, ?, 1)
+    `;
+
+    connection.query(
+        sql,
+        [productName, category, quantity, price, image],
+        (err) => {
+
+            if (err) throw err;
+
+            res.redirect('/products');
+
+        }
+    );
+
+});
+
 
 // all routes go above this port initializer please thank u :)
 const PORT = process.env.PORT || 3000;
