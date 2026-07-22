@@ -8,10 +8,12 @@
     <button type="submit" class="btn btn-primary">Search</button>
   </form>
 
+
   <h2 class="mb-3">Product Catalog</h2>
 
   <% if (products.length===0) { %>
     <p>No products found.</p>
+<<<<<<< HEAD
     <% } else { %>
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
         <% products.forEach(product=> { %>
@@ -39,4 +41,53 @@
           <% }) %>
       </div>
       <% } %>
+=======
+  <% } else { %>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+
+      <% products.forEach(product => { %>
+
+        <div class="col">
+
+          <a href="/product/<%= product.productId %>" class="text-decoration-none text-dark">
+
+            <div class="card h-100 shadow-sm">
+
+              <img src="<%= product.image %>"
+                   class="card-img-top"
+                   style="height:180px; object-fit:cover;"
+                   alt="<%= product.productName %>">
+
+              <div class="card-body text-center">
+
+                <h5 class="card-title">
+                  <%= product.productName %>
+                </h5>
+
+                <p class="card-text">
+                  $<%= product.price %>
+                </p>
+
+                <p class="card-text">
+                  <small class="text-muted">
+                    Stock: <%= product.stock %>
+                  </small>
+                </p>
+
+              </div>
+
+            </div>
+
+          </a>
+
+        </div>
+
+      <% }) %>
+
+    </div>
+
+  <% } %>
+
+>>>>>>> 30fc7787363cd53b556bad9bcf9acd9ca22f6b9c
 </div>
