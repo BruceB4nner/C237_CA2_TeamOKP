@@ -55,11 +55,29 @@ app.use((req, res, next) => {
 
 //Main Page "/" Route
 app.get('/', (req, res) => {
-    res.render('index', {
+  const sql = 'SELECT * FROM products WHERE stock > 0';
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching products:', err);
+      return res.render('index', {
         user: req.session.user,
-        messages: req.flash('success')
+        messages: req.flash('success'),
+        products: [] // fallback
+      });
+    }
+
+    // Shuffle results for randomness
+    const shuffled = results.sort(() => 0.5 - Math.random());
+
+    res.render('index', {
+      user: req.session.user,
+      messages: req.flash('success'),
+      products: shuffled
     });
+  });
 });
+
 
 app.get('/products', (req, res) => {
     const search = req.query.search || '';
@@ -198,13 +216,6 @@ app.get('/products/:id', (req, res) => {
     res.render('productDetails', { product, user: req.session.user });
   });
 });
-
-
-
-
-
-
-
 
 
 
