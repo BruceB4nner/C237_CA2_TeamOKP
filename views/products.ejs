@@ -19,6 +19,13 @@
         </form>
     </div>
 
+    <div class="d-flex justify-content-end mb-4">
+  <% if (user) { %>
+    <a href="/addProduct" class="btn btn-success">+ Add Product</a>
+  <% } %>
+</div>
+
+
     <h2 class="mb-4">Product Catalog</h2>
 
     <% if (products.length === 0) { %>
