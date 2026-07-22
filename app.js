@@ -129,6 +129,75 @@ function isAdmin(req, res, next) {
   res.status(403).send('Forbidden: Admins only');
 }
 
+// Categories array used across routes
+const CATEGORIES = [
+    'toys & collectibles',
+    'computers & tech',
+    "women's fashion",
+    "men's fashion",
+    'video gaming',
+    'furniture & home living',
+    'health & nutrition',
+    'tickets & vouchers',
+    'others'
+];
+
+// 1. HOMEPAGE ROUTE (Image Carousel & Categories)
+app.get('/', (req, res) => {
+    // Fetch latest reviews or featured products to display on the homepage
+    const sqlReviews = `
+        SELECT r.*, u.username, p.name AS product_name 
+        FROM reviews r 
+        JOIN users u ON r.user_id = u.id 
+        JOIN products p ON r.product_id = p.id 
+        LIMIT 4
+    `;
+    
+    db.query(sqlReviews, (err, reviews) => {
+        if (err) {
+            console.error('Error fetching homepage reviews:', err);
+            return res.render('index', { categories: CATEGORIES, reviews: [] });
+        }
+        res.render('index', { 
+            categories: CATEGORIES, 
+            reviews: reviews 
+        });
+    });
+});
+
+// 2. PRODUCT VIEWING, SEARCHING & CATEGORY FILTERING ROUTE
+app.get('/products', (req, res) => {
+    const search = req.query.search || '';
+    const category = req.query.category || '';
+
+    // Build dynamic SQL query based on filters
+    let sql = 'SELECT * FROM products WHERE 1=1';
+    let queryParams = [];
+
+    if (search.trim() !== '') {
+        sql += ' AND name LIKE ?';
+        queryParams.push(`%${search.trim()}%`);
+    }
+
+    if (category.trim() !== '') {
+        sql += ' AND category = ?';
+        queryParams.push(category.trim());
+    }
+
+    db.query(sql, queryParams, (err, results) => {
+        if (err) {
+            console.error('Error fetching products:', err);
+            return res.status(500).send('Database Error');
+        }
+
+        res.render('products', {
+            products: results,
+            search: search,
+            selectedCategory: category,
+            categories: CATEGORIES
+        });
+    });
+});
 
 //POST Route + Regsitration Validation(Josh)
 app.post('/register', validateRegistration, (req, res) => {

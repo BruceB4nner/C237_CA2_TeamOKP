@@ -1,81 +1,104 @@
 <head>
   <title>One Klick Purchase</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    .font-instrument {
+      font-family: 'Instrument Serif', serif;
+    }
+  </style>
 </head>
-<body>
 
-<!-- Promo Banner -->
-<div class="bg-danger text-white text-center py-1">
-  🎉 Get $10 off your first purchase!
+<!-- Promo Banner Enhancement -->
+<div class="bg-danger text-white text-center py-1 fw-bold small">
+  🎉 Welcome to One Klick Purchase! Get $10 off your first order with code: <strong>FIRST10</strong>
 </div>
 
-<nav id="headernavbar" class="navbar navbar-expand-sm navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a id="headernavbarbrand" class="navbar-brand" href="/">One Klick Purchase</a>
+<!-- Main Navbar -->
+<nav id="headernavbar" class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+  <div class="container">
+    <!-- Brand -->
+    <a id="headernavbarbrand" class="navbar-brand fw-bold font-instrument fs-3" href="/">One Klick Purchase</a>
 
-    <!-- Toggler button -->
+    <!-- Toggler button for Mobile -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Collapsible menu -->
+    <!-- Collapsible Menu -->
     <div class="collapse navbar-collapse" id="collapsibleNavbar">
-      <ul class="navbar-nav ms-auto">
-
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <!-- Home -->
-        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home</a>
+        </li>
 
         <!-- Shop All -->
-        <li class="nav-item"><a class="nav-link" href="/products">Shop All</a></li>
+        <li class="nav-item">
+          <a class="nav-link" href="/products">Shop All</a>
+        </li>
 
-        <!-- Categories Dropdown -->
+        <!-- Categories Dropdown (Ning Xin) -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" 
-             data-bs-toggle="dropdown" aria-expanded="false">
+          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Categories
           </a>
           <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-            <li><a class="dropdown-item" href="/toys-collectibles">Toys & Collectibles</a></li>
-            <li><a class="dropdown-item" href="/computers-tech">Computers & Tech</a></li>
-            <li><a class="dropdown-item" href="/womens-fashion">Women's Fashion</a></li>
-            <li><a class="dropdown-item" href="/mens-fashion">Men's Fashion</a></li>
-            <li><a class="dropdown-item" href="/video-gaming">Video Gaming</a></li>
-            <li><a class="dropdown-item" href="/furniture-home">Furniture & Home Living</a></li>
-            <li><a class="dropdown-item" href="/health-nutrition">Health & Nutrition</a></li>
-            <li><a class="dropdown-item" href="/tickets-vouchers">Tickets & Vouchers</a></li>
-            <li><a class="dropdown-item" href="/others">Others</a></li>
-
-
-
-
+            <% 
+              const defaultCategories = [
+                'toys & collectibles', 'computers & tech', "women's fashion", 
+                "men's fashion", 'video gaming', 'furniture & home living', 
+                'health & nutrition', 'tickets & vouchers', 'others'
+              ];
+              const catList = (typeof categories !== 'undefined' && categories.length > 0) ? categories : defaultCategories;
+            %>
+            <% catList.forEach(cat => { %>
+              <li>
+                <a class="dropdown-item text-capitalize" href="/products?category=<%= encodeURIComponent(cat) %>">
+                  <%= cat %>
+                </a>
+              </li>
+            <% }) %>
           </ul>
         </li>
-        <!-- User Login/Logout -->
-        <% if (user) { %>
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button"
-       data-bs-toggle="dropdown">
-      Hi, <%= user.username %>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end">
-      <li><a class="dropdown-item" href="/profile">Profile</a></li>
-      <li><a class="dropdown-item" href="/wishlist">Wishlist</a></li>
-      <li><a class="dropdown-item" href="/orders">My Orders</a></li>
-      <li><hr class="dropdown-divider"></li>
-      <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
-    </ul>
-  </li>
-<% } else { %>
-  <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
-<% } %>
+      </ul>
 
+      <!-- Product Search Bar (Ning Xin) -->
+      <form class="d-flex me-lg-3 my-2 my-lg-0" action="/products" method="GET">
+        <input class="form-control me-2" type="search" name="search" placeholder="Search products..." required>
+        <button class="btn btn-outline-light" type="submit">Search</button>
+      </form>
 
+      <!-- User Auth & Quick Links -->
+      <ul class="navbar-nav">
+        <% if (typeof user !== 'undefined' && user) { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/wishlist">❤️ Wishlist</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/cart">🛒 Cart</a>
+          </li>
+          <li class="nav-item dropdown ms-lg-2">
+            <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              Hi, <%= user.username %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="/profile">Profile</a></li>
+              <li><a class="dropdown-item" href="/orders">My Orders</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
+            </ul>
+          </li>
+        <% } else { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/login">Log In</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/register">Register</a>
+          </li>
+        <% } %>
       </ul>
     </div>
   </div>
 </nav>
-</body>
