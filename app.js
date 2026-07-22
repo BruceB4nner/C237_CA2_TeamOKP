@@ -186,6 +186,37 @@ app.get('/logout', (req, res) => {
     });
 });
 
+
+
+
+//View Product (Josh)
+app.get('/products/:id', (req, res) => {
+  const productId = req.params.id;
+  const sql = 'SELECT * FROM products WHERE productId = ?';
+
+  connection.query(sql, [productId], (err, results) => {
+    if (err) throw err;
+
+    if (results.length === 0) {
+      return res.status(404).send('Product not found');
+    }
+
+    const product = results[0];
+    res.render('productDetails', { product, user: req.session.user });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
 // add product route (myiesha)
 // get route
 app.get('/addProduct', (req, res) => {
