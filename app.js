@@ -290,7 +290,7 @@ app.get('/products/:id', (req, res) => {
     });
 });
 
-
+// add product routes (myiesha)
 app.get('/addProduct', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -306,18 +306,26 @@ app.post('/addProduct', (req, res) => {
         return res.redirect('/login');
     }
 
-    const { productName, category, description, quantity, price, image } = req.body;
-    const userId = req.session.user.userId;
+    const { productName, category, description, stock, price, image } = req.body;
+    const userId = req.session.user.id;
 
     const sql = `
         INSERT INTO products
-        (productName, category, description, quantity, price, image, stock, userId)
-        VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+        (productName, category, description, price, image, stock, userId)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     connection.query(
         sql,
-        [productName, category, description, quantity, price, image, userId],
+        [
+            productName,
+            category,
+            description,
+            price,
+            image,
+            stock,
+            userId
+        ],
         (err) => {
             if (err) throw err;
             res.redirect('/products');
@@ -328,7 +336,7 @@ app.post('/addProduct', (req, res) => {
 // wishlist routes (myiesha)
 app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
 
-    const userId = req.session.user.userId;
+    const userId = req.session.user.id;
     const productId = req.params.id;
 
     const checkSql = `
