@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/style.css" rel="stylesheet"> <!-- must come AFTER Bootstrap -->
   <title>One Klick Purchase</title>
 </head>
 <body>
@@ -13,41 +14,51 @@
     <!-- About Section -->
     <section class="text-center mb-5">
       <h2 class="fw-bold">About One Klick Purchase</h2>
-      <p class="lead text-muted mx-auto" style="max-width: 600px;">
+      <p class="lead text-muted mx-auto">
         We're a team of 5 youths who have decided to create our very own e‑commerce platform
         for users to buy and list items!
       </p>
     </section>
 
     <!-- Homepage Carousel (Ning Xin) -->
-    <% if (typeof products !== 'undefined' && products.length > 0) { %>
-      <div id="productCarousel" class="carousel slide my-5 shadow rounded overflow-hidden" data-bs-ride="carousel" data-bs-interval="4000">
-        <div class="carousel-inner">
-          <% products.forEach((product, index) => { %>
-            <div class="carousel-item <%= index === 0 ? 'active' : '' %>" style="height: 400px;">
-              <img 
-                src="<%= product.image || product.image_url || 'https://via.placeholder.com/800x400?text=No+Image' %>" 
-                class="w-100 h-100 object-fit-cover d-block" 
-                alt="<%= product.title || product.name %>"
-              >
-              <div class="carousel-caption bg-dark bg-opacity-75 rounded p-3">
-                <h5 class="fw-bold"><%= product.title || product.name %></h5>
-                <p class="small d-none d-md-block"><%= product.description %></p>
-                <a href="/products/<%= product.id %>" class="btn btn-sm btn-light font-weight-bold">View Product</a>
-              </div>
-            </div>
-          <% }) %>
+<div id="productCarousel" class="carousel slide my-5 shadow rounded overflow-hidden" data-bs-ride="carousel" data-bs-interval="4000">
+  <div class="carousel-inner">
+    <% products.forEach((product, index) => { %>
+      <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
+        <div class="row align-items-center justify-content-center">
+          <!-- Left: Product image -->
+          <div class="col-md-6 text-center position-relative">
+  <img src="<%= product.image || 'https://via.placeholder.com/400' %>" 
+       class="img-fluid rounded" 
+       alt="<%= product.productName %>">
+
+  <div class="product-label">
+    <%= product.productName %>
+  </div>
+</div>
+
+
+          <!-- Right: Product info + review -->
+          <div class="col-md-6">
+            <h4 class="fw-bold"><%= product.title || product.name %></h4>
+            <p class="fst-italic text-muted">"<%= product.review || 'No review yet.' %>"</p>
+            <a href="/products/<%= product.id %>" class="btn btn-primary btn-sm mt-2">View Product</a>
+          </div>
         </div>
-        
-        <!-- Controls -->
-        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon"></span>
-        </button>
       </div>
-    <% } %>
+    <% }) %>
+  </div>
+
+  <!-- Controls -->
+  <button id="leftbutton" class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button id="rightbutton" class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+
 
     <!-- Categories Grid Section (Ning Xin) -->
     <section class="my-5">
@@ -98,8 +109,6 @@
   </main>
 
   <%- include('partials/footer.ejs') %>
-
-  <!-- dont add bootstrap bundle anywhere else -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
