@@ -328,29 +328,41 @@ app.post('/addProduct', (req, res) => {
 // wishlist routes (myiesha)
 app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
 
-    const userId = req.session.user.id;
+    const userId = req.session.user.userId;
     const productId = req.params.id;
 
-    const sql = `
-        INSERT IGNORE INTO wishlist(userId, productId)
-        VALUES (?, ?)
+    const checkSql = `
+    SELECT * FROM wishlist
+    WHERE userId = ? AND productId = ?
     `;
 
-    connection.query(sql, [userId, productId], (err) => {
+    connection.query(checkSql, [userId, productId], (err, results) => {
 
-        if (err) {
-            console.log(err);
-            return res.send("Database Error");
+        if (err) throw err;
+
+        if (results.length > 0) {
+            return res.redirect('/wishlist');
         }
 
-        res.redirect('/products');
+        const insertSql = `
+        INSERT INTO wishlist (userId, productId)
+        VALUES (?, ?)
+        `;
+
+        connection.query(insertSql, [userId, productId], (err) => {
+
+            if (err) throw err;
+
+            res.redirect('/wishlist');
+        });
+
     });
 
 });
 
 app.get('/wishlist', checkAuthenticated, (req, res) => {
 
-    const userId = req.session.user.id;
+    const userId = req.session.user.userId;
 
     const sql = `
         SELECT products.*
