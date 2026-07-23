@@ -327,50 +327,74 @@ app.post('/addProduct', (req, res) => {
 
 // wishlist routes (myiesha)
 app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
+
     const userId = req.session.user.id;
     const productId = req.params.id;
 
     const sql = `
-        INSERT IGNORE INTO wishlist(user_id, product_id)
+        INSERT IGNORE INTO wishlist(userId, productId)
         VALUES (?, ?)
     `;
 
     connection.query(sql, [userId, productId], (err) => {
-        if (err) throw err;
+
+        if (err) {
+            console.log(err);
+            return res.send("Database Error");
+        }
+
         res.redirect('/products');
     });
+
 });
 
 app.get('/wishlist', checkAuthenticated, (req, res) => {
+
     const userId = req.session.user.id;
 
     const sql = `
         SELECT products.*
         FROM wishlist
         JOIN products
-        ON wishlist.product_id = products.id
-        WHERE wishlist.user_id = ?
+        ON wishlist.productId = products.productId
+        WHERE wishlist.userId = ?
     `;
 
     connection.query(sql, [userId], (err, results) => {
-        if (err) throw err;
-        res.render('wishlist', {
-            products: results
+
+        if (err) {
+            console.log(err);
+            return res.send("Database Error");
+        }
+
+        res.render("wishlist", {
+            products: results,
+            user: req.session.user
         });
+
     });
+
 });
 
 app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
+
     const sql = `
         DELETE FROM wishlist
-        WHERE product_id = ?
-        AND user_id = ?
+        WHERE productId = ?
+        AND userId = ?
     `;
 
     connection.query(sql, [req.params.id, req.session.user.id], (err) => {
-        if (err) throw err;
-        res.redirect('/wishlist');
+
+        if (err) {
+            console.log(err);
+            return res.send("Database Error");
+        }
+
+        res.redirect("/wishlist");
+
     });
+
 });
 
 // delete products
