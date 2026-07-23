@@ -334,15 +334,17 @@ app.post('/addProduct', (req, res) => {
 });
 
 // wishlist routes (myiesha)
-app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
+app.post('/wishlist/add/:productid', checkAuthenticated, (req, res) => {
 
     const userId = req.session.user.id;
-    const productId = req.params.id;
+    const productId = req.params.productid;
 
     const checkSql = `
     SELECT * FROM wishlist
     WHERE userId = ? AND productId = ?
     `;
+    console.log("User ID:", userId);
+    console.log("Product ID:", productId);
 
     connection.query(checkSql, [userId, productId], (err, results) => {
 
@@ -359,10 +361,13 @@ app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
 
         connection.query(insertSql, [userId, productId], (err) => {
 
-            if (err) throw err;
+    if (err) throw err;
 
-            res.redirect('/wishlist');
-        });
+    console.log("Inserted into wishlist!");
+
+    res.redirect('/wishlist');
+
+});
 
     });
 
@@ -370,7 +375,7 @@ app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
 
 app.get('/wishlist', checkAuthenticated, (req, res) => {
 
-    const userId = req.session.user.userId;
+    const userId = req.session.user.id;
 
     const sql = `
         SELECT products.*
@@ -387,6 +392,10 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
             return res.send("Database Error");
         }
 
+        // 👇 ADD THESE
+        console.log("User ID:", userId);
+        console.log("Wishlist Results:", results);
+
         res.render("wishlist", {
             products: results,
             user: req.session.user
@@ -398,13 +407,15 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
 
 app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
 
+    const productId = req.params.id;
+    const userId = req.session.user.id;
+
     const sql = `
         DELETE FROM wishlist
-        WHERE productId = ?
-        AND userId = ?
+        WHERE productId = ? AND userId = ?
     `;
 
-    connection.query(sql, [req.params.id, req.session.user.id], (err) => {
+    connection.query(sql, [productId, userId], (err, results) => {
 
         if (err) {
             console.log(err);
@@ -419,16 +430,26 @@ app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
 
 // delete products
 app.post('/products/delete/:id', (req, res) => {
+
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Forbidden: Admins only');
     }
 
     const productId = req.params.id;
-    connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
+
+    const sql = `
+        DELETE FROM products
+        WHERE productId = ?
+    `;
+
+    connection.query(sql, [productId], (err) => {
+
         if (err) throw err;
+
         req.flash('success', 'Product deleted successfully');
         res.redirect('/products');
     });
+
 });
 
 app.get('/angie', (req, res) => { res.render('angie'); });
