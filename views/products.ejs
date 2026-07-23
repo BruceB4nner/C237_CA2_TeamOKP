@@ -55,7 +55,7 @@
 
             <!-- Action Buttons -->
             <div class="d-flex flex-wrap gap-2 mb-4">
-                <% if (user) { %>
+                <% if (typeof user !== 'undefined' && user) { %>
                     <form action="/wishlist/add/<%= product.productId %>" method="POST" class="m-0">
                         <button type="submit" class="btn btn-outline-danger fw-semibold">❤️ Add to Wishlist</button>
                     </form>
@@ -64,7 +64,7 @@
             </div>
 
             <!-- Owner or Admin Management Box -->
-            <% if (user && (user.userId == product.userId || user.role === 'admin')) { %>
+            <% if (typeof user !== 'undefined' && user && (user.userId == product.userId || user.role === 'admin')) { %>
                 <div class="card bg-light border-0 p-3 mt-4 shadow-sm">
                     <h6 class="fw-bold text-muted mb-2">Management Controls</h6>
                     <div class="d-flex gap-2">

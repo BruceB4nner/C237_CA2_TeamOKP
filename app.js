@@ -273,10 +273,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// ==========================================
-// PRODUCT DETAILS & MANAGEMENT (myiesha)
-// ==========================================
-
+// 1. Single product route (ensure it renders 'product')
 app.get('/products/:id', (req, res) => {
     const productId = req.params.id;
     const sql = 'SELECT * FROM products WHERE productId = ?';
@@ -289,9 +286,10 @@ app.get('/products/:id', (req, res) => {
         }
 
         const product = results[0];
-        res.render('productDetails', { product, user: req.session.user });
+        res.render('product', { product, user: req.session.user });
     });
 });
+
 
 app.get('/addProduct', (req, res) => {
     if (!req.session.user) {
