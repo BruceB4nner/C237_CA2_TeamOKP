@@ -36,55 +36,118 @@ main, section {flex: 1; /* pushes footer down */}
    ningxin styles
    ========================================== */
 
-/* Page Background & Perfect Centering */
+/* Page Background & Layout */
 body.ningxin-page {
-  background-color: #fdf2f8 !important; /* Soft pink background */
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%) !important;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background Decorative Floating Circles */
+body.ningxin-page::before,
+body.ningxin-page::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+body.ningxin-page::before {
+  width: 300px;
+  height: 300px;
+  background: rgba(244, 114, 182, 0.25);
+  top: 10%;
+  left: -50px;
+}
+
+body.ningxin-page::after {
+  width: 350px;
+  height: 350px;
+  background: rgba(251, 207, 232, 0.4);
+  bottom: 5%;
+  right: -50px;
 }
 
 .ningxin-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
+  min-height: 85vh;
   padding: 40px 20px;
+  position: relative;
+  z-index: 1; /* Keeps card above background shapes */
 }
 
 /* Profile Card Styling */
 .profile-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   max-width: 650px;
   width: 100%;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(244, 114, 182, 0.15), 0 4px 10px rgba(0, 0, 0, 0.03);
-  padding: 40px;
+  border-radius: 24px;
+  border: 1px solid rgba(251, 207, 232, 0.8);
+  box-shadow: 0 15px 35px rgba(236, 72, 153, 0.12), 0 5px 15px rgba(0, 0, 0, 0.04);
+  padding: 45px 40px;
   text-align: center;
   margin: auto;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
+/* OVERRIDE FONT ONLY FOR NING XIN CARD ELEMENTS */
+.profile-card h1,
+.profile-card h2,
+.profile-card p,
+.profile-card div,
+.profile-card span,
+.profile-card a {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-style: normal !important;
+}
+
+.profile-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(236, 72, 153, 0.18);
+}
+
+/* Profile Image with Hover Glow */
 .profile-img {
   width: 150px;
   height: 150px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #f472b6; /* Soft pink border */
-  box-shadow: 0 4px 15px rgba(244, 114, 182, 0.3);
+  border: 4px solid #f472b6;
+  box-shadow: 0 6px 18px rgba(244, 114, 182, 0.35);
   margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.profile-img:hover {
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.5);
+}
+
+/* Subtitle / Status Badge */
 .subtitle {
   display: inline-block;
-  background-color: #fce7f3; /* Light pink badge background */
-  color: #be185d; /* Dark pink text */
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  color: #9d174d;
   font-size: 0.875rem;
   font-weight: 600;
-  padding: 6px 16px;
+  padding: 6px 18px;
   border-radius: 20px;
   margin-bottom: 24px;
+  border: 1px solid #f9a8d4;
+  letter-spacing: 0.3px;
 }
 
+/* About Text Section */
 .about-text {
   text-align: left;
-  line-height: 1.7;
+  line-height: 1.8;
   color: #334155;
   font-size: 1.05rem;
 }
@@ -93,42 +156,53 @@ body.ningxin-page {
   margin-bottom: 16px;
 }
 
+/* Skills Grid & Tags */
 .skills-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-  margin: 24px 0;
+  margin: 28px 0;
 }
 
 .skill-tag {
   background-color: #fdf2f8;
-  color: #db2777;
+  color: #be185d;
   border: 1px solid #fbcfe8;
-  padding: 6px 14px;
-  border-radius: 8px;
+  padding: 7px 16px;
+  border-radius: 12px;
   font-size: 0.875rem;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
+.skill-tag:hover {
+  background-color: #fce7f3;
+  transform: translateY(-2px);
+  border-color: #f472b6;
+}
+
+/* Styled LinkedIn Button */
 .linkedin-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background-color: #0a66c2;
+  gap: 10px;
+  background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
   color: white;
   text-decoration: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 12px 28px;
+  border-radius: 12px;
   font-weight: 600;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 14px rgba(10, 102, 194, 0.3);
+  transition: all 0.2s ease;
   margin-top: 10px;
 }
 
 .linkedin-btn:hover {
-  background-color: #004182;
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(10, 102, 194, 0.4);
+  color: white;
 }
 
 .linkedin-btn svg {
@@ -191,4 +265,3 @@ body.ningxin-page {
     width: 100% !important;
   }
 }
- 
