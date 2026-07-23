@@ -5,7 +5,6 @@ const multer = require('multer');
 const session = require('express-session');
 const flash = require('connect-flash');
 
-
 // Multer Storage Setup
 const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, 'public/images'); },
@@ -52,6 +51,14 @@ app.use((req, res, next) => {
     res.locals.user = req.session.user;
     next();
 });
+
+// Authentication middleware check
+function checkAuthenticated(req, res, next) {
+    if (req.session.user) {
+        return next();
+    }
+    res.redirect('/login');
+}
 
 // Only lets the request through if logged-in user owns this product, or is an admin
 function isOwnerOrAdmin(req, res, next) {
@@ -154,13 +161,12 @@ app.get('/', (req, res) => {
 });
 
 // ==========================================
-// NING XIN: PRODUCT VIEWING, SEARCHING, CATEGORY FILTERING, SORTING & PRICE RANGE
+// NING XIN: PRODUCT VIEWING, CATEGORY FILTERING, SORTING & PRICE RANGE
 // ==========================================
 app.get('/products', (req, res) => {
     let sql = "SELECT * FROM products WHERE 1=1";
     let params = [];
 
-    // Extract filter query parameters safely (search removed)
     const category = req.query.category || '';
     const minPrice = req.query.minPrice || '';
     const maxPrice = req.query.maxPrice || '';
@@ -193,8 +199,8 @@ app.get('/products', (req, res) => {
         sql += " ORDER BY productId DESC";
     }
 
-    // Execute query
-    db.query(sql, params, (err, results) => {
+    // Execute query using connection
+    connection.query(sql, params, (err, results) => {
         if (err) {
             console.error("Database error:", err);
             return res.status(500).send("Server Error");
@@ -206,7 +212,7 @@ app.get('/products', (req, res) => {
             selectedSort: sort,
             minPrice: minPrice,
             maxPrice: maxPrice,
-            user: req.session.user || null // Adjust based on how you store user sessions
+            user: req.session.user || null
         });
     });
 });
@@ -321,8 +327,7 @@ app.post('/addProduct', (req, res) => {
     );
 });
 
-// wishlist route (myiesha)
-// add to wishlist
+// wishlist routes (myiesha)
 app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
     const userId = req.session.user.id;
     const productId = req.params.id;
@@ -332,14 +337,12 @@ app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
         VALUES (?, ?)
     `;
 
-    db.query(sql, [userId, productId], (err) => {
+    connection.query(sql, [userId, productId], (err) => {
         if (err) throw err;
-
         res.redirect('/products');
     });
 });
 
-// view wishlist 
 app.get('/wishlist', checkAuthenticated, (req, res) => {
     const userId = req.session.user.id;
 
@@ -351,30 +354,25 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
         WHERE wishlist.user_id = ?
     `;
 
-    db.query(sql, [userId], (err, results) => {
+    connection.query(sql, [userId], (err, results) => {
         if (err) throw err;
-
         res.render('wishlist', {
             products: results
         });
     });
 });
 
-// remove from wishlist (myiesha)
 app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
-
     const sql = `
         DELETE FROM wishlist
         WHERE product_id = ?
         AND user_id = ?
     `;
 
-    db.query(sql, [req.params.id, req.session.user.id], (err) => {
+    connection.query(sql, [req.params.id, req.session.user.id], (err) => {
         if (err) throw err;
-
         res.redirect('/wishlist');
     });
-
 });
 
 // delete products
