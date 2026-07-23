@@ -87,7 +87,7 @@ main, section {flex: 1; /* pushes footer down */}
             }
         }
 
-        <style>
+       
         :root {
             --primary-color: #0d9488;
             --primary-hover: #0f766e;
@@ -200,4 +200,4 @@ main, section {flex: 1; /* pushes footer down */}
             height: 18px;
             fill: currentColor;
         }
-    </style>
+ 
