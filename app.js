@@ -290,6 +290,30 @@ app.get('/products/:id', (req, res) => {
     });
 });
 
+//Edit Product (Kai Peng)
+app.get('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
+
+    const productId = req.params.id;
+
+    const sql = "SELECT * FROM products WHERE productId = ?";
+
+    connection.query(sql, [productId], (err, results) => {
+
+        if (err) throw err;
+
+        if (results.length === 0) {
+            return res.send("Product not found");
+        }
+
+        res.render("editProduct", {
+            product: results[0],
+            user: req.session.user
+        });
+
+    });
+
+});
+
 // add product routes (myiesha)
 app.get('/addProduct', (req, res) => {
     if (!req.session.user) {
@@ -331,6 +355,54 @@ app.post('/addProduct', (req, res) => {
             res.redirect('/products');
         }
     );
+});
+
+//Edit Product (Kai Peng)
+app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
+
+    const productId = req.params.id;
+
+    const {
+        productName,
+        category,
+        description,
+        stock,
+        price,
+        image
+    } = req.body;
+
+    const sql = `
+        UPDATE products
+        SET
+            productName = ?,
+            category = ?,
+            description = ?,
+            stock = ?,
+            price = ?,
+            image = ?
+        WHERE productId = ?
+    `;
+
+    connection.query(
+        sql,
+        [
+            productName,
+            category,
+            description,
+            stock,
+            price,
+            image,
+            productId
+        ],
+        (err) => {
+
+            if (err) throw err;
+
+            res.redirect("/products");
+
+        }
+    );
+
 });
 
 // wishlist routes (myiesha)
