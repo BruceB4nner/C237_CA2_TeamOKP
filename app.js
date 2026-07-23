@@ -274,7 +274,7 @@ app.get('/logout', (req, res) => {
 });
 
 // ==========================================
-// PRODUCT DETAILS & MANAGEMENT
+// PRODUCT DETAILS & MANAGEMENT (myiesha)
 // ==========================================
 
 app.get('/products/:id', (req, res) => {
@@ -327,6 +327,63 @@ app.post('/addProduct', (req, res) => {
     );
 });
 
+// wishlist route (myiesha)
+// add to wishlist
+app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
+    const userId = req.session.user.id;
+    const productId = req.params.id;
+
+    const sql = `
+        INSERT IGNORE INTO wishlist(user_id, product_id)
+        VALUES (?, ?)
+    `;
+
+    db.query(sql, [userId, productId], (err) => {
+        if (err) throw err;
+
+        res.redirect('/products');
+    });
+});
+
+// view wishlist 
+app.get('/wishlist', checkAuthenticated, (req, res) => {
+    const userId = req.session.user.id;
+
+    const sql = `
+        SELECT products.*
+        FROM wishlist
+        JOIN products
+        ON wishlist.product_id = products.id
+        WHERE wishlist.user_id = ?
+    `;
+
+    db.query(sql, [userId], (err, results) => {
+        if (err) throw err;
+
+        res.render('wishlist', {
+            products: results
+        });
+    });
+});
+
+// remove from wishlist (myiesha)
+app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
+
+    const sql = `
+        DELETE FROM wishlist
+        WHERE product_id = ?
+        AND user_id = ?
+    `;
+
+    db.query(sql, [req.params.id, req.session.user.id], (err) => {
+        if (err) throw err;
+
+        res.redirect('/wishlist');
+    });
+
+});
+
+// delete products
 app.post('/products/delete/:id', (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Forbidden: Admins only');
