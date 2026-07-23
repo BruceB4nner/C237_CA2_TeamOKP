@@ -13,7 +13,6 @@
 
 <%
     // Safely extract and format view variables
-    const searchVal = (typeof search !== 'undefined' && search) ? String(search) : '';
     const catVal = (typeof selectedCategory !== 'undefined' && selectedCategory) ? String(selectedCategory) : '';
     const sortVal = (typeof selectedSort !== 'undefined' && selectedSort) ? String(selectedSort) : '';
     const minVal = (typeof minPrice !== 'undefined' && minPrice) ? String(minPrice) : '';
@@ -29,7 +28,6 @@
     const catList = (typeof categories !== 'undefined' && Array.isArray(categories) && categories.length > 0) ? categories : defaultCategories;
 
     const hasFilters = Boolean(
-        searchVal.trim() !== '' || 
         catVal.trim() !== '' || 
         sortVal.trim() !== '' || 
         minVal.trim() !== '' || 
@@ -38,27 +36,12 @@
 %>
 
 <div class="container mt-4">
-    <!-- Search, Category, Price Range & Sort Filter Form -->
+    <!-- Category, Price Range & Sort Filter Form -->
     <div class="bg-light p-3 rounded shadow-sm mb-3">
         <form method="GET" action="/products" class="row g-2 align-items-center" id="searchForm">
             
-            <!-- Instant Live Search Input & Recent History Container -->
-            <div class="col-lg-3 col-md-6 position-relative">
-                <input 
-                    type="text" 
-                    id="liveSearchInput"
-                    class="form-control" 
-                    name="search" 
-                    value="<%= searchVal %>" 
-                    placeholder="Search products..."
-                    autocomplete="off"
-                >
-                <!-- Recent Searches Chips Container -->
-                <div id="recentSearchesContainer" class="d-none"></div>
-            </div>
-
             <!-- Category Dropdown Filter -->
-            <div class="col-lg-2 col-md-6">
+            <div class="col-lg-3 col-md-6">
                 <select name="category" id="categorySelect" class="form-select text-capitalize" onchange="this.form.submit()">
                     <option value="">All Categories</option>
                     <% catList.forEach(function(cat) { %>
@@ -70,7 +53,7 @@
             </div>
 
             <!-- Price Range Inputs -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <div class="input-group">
                     <span class="input-group-text bg-white">$</span>
                     <input type="number" step="0.01" min="0" name="minPrice" class="form-control" placeholder="Min" value="<%= minVal %>">
@@ -80,7 +63,7 @@
             </div>
 
             <!-- Sort By Dropdown Filter -->
-            <div class="col-lg-2 col-md-6">
+            <div class="col-lg-3 col-md-6">
                 <select name="sort" id="sortSelect" class="form-select" onchange="this.form.submit()">
                     <option value="">Sort: Featured</option>
                     <option value="price_asc" <%= sortVal === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
@@ -97,43 +80,36 @@
         </form>
     </div>
 
-    <!-- Active Filter Badges, Results Counter & View Toggle Bar -->
+    <!-- Active Filter Badges & Results Counter Bar -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 bg-white p-2 border-bottom gap-2">
 
         <!-- Filter Chips Container -->
         <div class="d-flex flex-wrap gap-2 align-items-center" id="activeBadgesContainer">
-            <% if (searchVal.trim() !== '') { %>
-                <span class="badge bg-primary fs-6 d-inline-flex align-items-center gap-1">
-                    Search: "<%= searchVal %>"
-                    <a href="/products?category=<%= catVal %>&sort=<%= sortVal %>&minPrice=<%= minVal %>&maxPrice=<%= maxVal %>" class="text-white text-decoration-none ms-1" title="Remove search filter">&times;</a>
-                </span>
-            <% } %>
-
             <% if (catVal.trim() !== '') { %>
                 <span class="badge bg-secondary fs-6 d-inline-flex align-items-center gap-1 text-capitalize">
                     Category: <%= catVal %>
-                    <a href="/products?search=<%= searchVal %>&sort=<%= sortVal %>&minPrice=<%= minVal %>&maxPrice=<%= maxVal %>" class="text-white text-decoration-none ms-1" title="Remove category filter">&times;</a>
+                    <a href="/products?sort=<%= sortVal %>&minPrice=<%= minVal %>&maxPrice=<%= maxVal %>" class="text-white text-decoration-none ms-1" title="Remove category filter">&times;</a>
                 </span>
             <% } %>
 
             <% if (minVal.trim() !== '') { %>
                 <span class="badge bg-success fs-6 d-inline-flex align-items-center gap-1">
                     Min Price: $<%= minVal %>
-                    <a href="/products?search=<%= searchVal %>&category=<%= catVal %>&sort=<%= sortVal %>&maxPrice=<%= maxVal %>" class="text-white text-decoration-none ms-1" title="Remove min price">&times;</a>
+                    <a href="/products?category=<%= catVal %>&sort=<%= sortVal %>&maxPrice=<%= maxVal %>" class="text-white text-decoration-none ms-1" title="Remove min price">&times;</a>
                 </span>
             <% } %>
 
             <% if (maxVal.trim() !== '') { %>
                 <span class="badge bg-success fs-6 d-inline-flex align-items-center gap-1">
                     Max Price: $<%= maxVal %>
-                    <a href="/products?search=<%= searchVal %>&category=<%= catVal %>&sort=<%= sortVal %>&minPrice=<%= minVal %>" class="text-white text-decoration-none ms-1" title="Remove max price">&times;</a>
+                    <a href="/products?category=<%= catVal %>&sort=<%= sortVal %>&minPrice=<%= minVal %>" class="text-white text-decoration-none ms-1" title="Remove max price">&times;</a>
                 </span>
             <% } %>
 
             <% if (sortVal.trim() !== '') { %>
                 <span class="badge bg-info text-dark fs-6 d-inline-flex align-items-center gap-1">
                     Sort: <%= sortVal === 'price_asc' ? 'Price: Low to High' : (sortVal === 'price_desc' ? 'Price: High to Low' : 'Newest') %>
-                    <a href="/products?search=<%= searchVal %>&category=<%= catVal %>&minPrice=<%= minVal %>&maxPrice=<%= maxVal %>" class="text-dark text-decoration-none ms-1" title="Remove sort filter">&times;</a>
+                    <a href="/products?category=<%= catVal %>&minPrice=<%= minVal %>&maxPrice=<%= maxVal %>" class="text-dark text-decoration-none ms-1" title="Remove sort filter">&times;</a>
                 </span>
             <% } %>
 
@@ -157,7 +133,7 @@
         <div class="text-center py-5">
             <div class="alert alert-warning py-4 shadow-sm">
                 <h5 class="fw-bold">No products found matching your request.</h5>
-                <p class="mb-0 text-muted">Try adjusting your search terms, price range, or category filter.</p>
+                <p class="mb-0 text-muted">Try adjusting your price range or category filter.</p>
                 <a href="/products" class="btn btn-sm btn-primary mt-3">View All Products</a>
             </div>
         </div>
@@ -173,7 +149,7 @@
                     const pStock = Number(product.stock || 0);
                     const pDesc = product.description || 'No detailed description available for this product.';
                 %>
-                <div class="col product-card-col" data-name="<%= pName.toLowerCase() %>">
+                <div class="col product-card-col">
                     <div class="card h-100 shadow-sm border-0">
                         <a href="/products/<%= product.productId %>" class="text-decoration-none text-dark product-card-link">
                             <img 
@@ -187,7 +163,9 @@
                                 <div class="mb-2 d-flex flex-wrap justify-content-center gap-1">
                                     <span class="badge bg-secondary text-capitalize"><%= pCat %></span>
                                     <% if (pStock > 0 && pStock <= 3) { %>
-                                
+                                        <span class="badge bg-warning text-dark fw-bold">
+                                            🔥 Low Stock: <%= pStock %> left
+                                        </span>
                                     <% } %>
                                 </div>
 
@@ -218,7 +196,7 @@
                                 data-description="<%= pDesc %>"
                                 data-id="<%= product.productId %>"
                             >
-                                Quick View
+                                👁️ Quick View
                             </button>
                         </div>
 
@@ -234,21 +212,66 @@
                 </div>
             <% }); %>
         </div>
-
-        <div id="noLiveResults" class="text-center py-5 d-none">
-            <div class="alert alert-warning py-4 shadow-sm">
-                <h5 class="fw-bold">No products match what you're typing.</h5>
-                <p class="mb-0 text-muted">Try typing a different name or keyword!</p>
-            </div>
-        </div>
     <% } %>
 
+</div>
+
+<!-- Quick View Product Bootstrap Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="quickViewModalLabel">Product Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-5 text-center">
+                        <img id="qvImage" src="" class="img-fluid rounded shadow-sm w-100" style="max-height: 280px; object-fit: cover;" alt="Product Image">
+                    </div>
+                    <div class="col-md-7">
+                        <span id="qvCategory" class="badge bg-secondary text-capitalize mb-2">Category</span>
+                        <h3 id="qvName" class="fw-bold mb-2">Product Name</h3>
+                        <h4 id="qvPrice" class="text-danger fw-bold my-2">$0.00</h4>
+                        <p id="qvStock" class="text-muted small mb-3">Stock: 0</p>
+                        <p id="qvDescription" class="text-secondary small bg-light p-3 rounded">Description goes here...</p>
+                        <hr>
+                        <div class="d-flex gap-2">
+                            <a id="qvFullDetailsBtn" href="#" class="btn btn-primary fw-semibold flex-grow-1">View Details Page</a>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <br>
 <%- include('partials/footer.ejs') %>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Client-side Quick View Modal Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const quickViewModal = document.getElementById('quickViewModal');
+    if (quickViewModal) {
+      quickViewModal.addEventListener('show.bs.modal', (event) => {
+        const button = event.relatedTarget;
+        if (!button) return;
+
+        document.getElementById('qvName').textContent = button.getAttribute('data-name');
+        document.getElementById('qvPrice').textContent = '$' + button.getAttribute('data-price');
+        document.getElementById('qvCategory').textContent = button.getAttribute('data-category');
+        document.getElementById('qvImage').src = button.getAttribute('data-image');
+        document.getElementById('qvImage').alt = button.getAttribute('data-name');
+        document.getElementById('qvStock').textContent = 'Stock: ' + button.getAttribute('data-stock') + ' available';
+        document.getElementById('qvDescription').textContent = button.getAttribute('data-description');
+        document.getElementById('qvFullDetailsBtn').href = '/products/' + button.getAttribute('data-id');
+      });
+    }
+  });
 </script>
 </body>
-</html> 
+</html>

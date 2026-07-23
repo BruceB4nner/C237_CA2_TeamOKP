@@ -5,6 +5,7 @@ const multer = require('multer');
 const session = require('express-session');
 const flash = require('connect-flash');
 
+
 // Multer Storage Setup
 const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, 'public/images'); },
@@ -156,63 +157,56 @@ app.get('/', (req, res) => {
 // NING XIN: PRODUCT VIEWING, SEARCHING, CATEGORY FILTERING, SORTING & PRICE RANGE
 // ==========================================
 app.get('/products', (req, res) => {
-    const search = req.query.search || '';
+    let sql = "SELECT * FROM products WHERE 1=1";
+    let params = [];
+
+    // Extract filter query parameters safely (search removed)
     const category = req.query.category || '';
-    const sort = req.query.sort || '';
     const minPrice = req.query.minPrice || '';
     const maxPrice = req.query.maxPrice || '';
+    const sort = req.query.sort || '';
 
-    let sql = 'SELECT * FROM products WHERE 1=1';
-    let queryParams = [];
-
-    // Filter by Keyword (searches productName)
-    if (search.trim() !== '') {
-        sql += ' AND productName LIKE ?';
-        queryParams.push(`%${search.trim()}%`);
-    }
-
-    // Filter by Selected Category
+    // Append Category filter
     if (category.trim() !== '') {
-        sql += ' AND category = ?';
-        queryParams.push(category.trim());
+        sql += " AND category = ?";
+        params.push(category);
     }
 
-    // Filter by Minimum Price
-    if (minPrice !== '' && !isNaN(minPrice)) {
-        sql += ' AND price >= ?';
-        queryParams.push(parseFloat(minPrice));
+    // Append Min Price filter
+    if (minPrice.trim() !== '') {
+        sql += " AND price >= ?";
+        params.push(parseFloat(minPrice));
     }
 
-    // Filter by Maximum Price
-    if (maxPrice !== '' && !isNaN(maxPrice)) {
-        sql += ' AND price <= ?';
-        queryParams.push(parseFloat(maxPrice));
+    // Append Max Price filter
+    if (maxPrice.trim() !== '') {
+        sql += " AND price <= ?";
+        params.push(parseFloat(maxPrice));
     }
 
-    // Dynamic SQL Sorting Logic
+    // Append Sorting
     if (sort === 'price_asc') {
-        sql += ' ORDER BY price ASC';
+        sql += " ORDER BY price ASC";
     } else if (sort === 'price_desc') {
-        sql += ' ORDER BY price DESC';
+        sql += " ORDER BY price DESC";
     } else if (sort === 'newest') {
-        sql += ' ORDER BY productId DESC';
+        sql += " ORDER BY productId DESC";
     }
 
-    connection.query(sql, queryParams, (err, results) => {
+    // Execute query
+    db.query(sql, params, (err, results) => {
         if (err) {
-            console.error('Error fetching products:', err);
-            return res.status(500).send('Database Error');
+            console.error("Database error:", err);
+            return res.status(500).send("Server Error");
         }
 
         res.render('products', {
             products: results,
-            search: search,
             selectedCategory: category,
             selectedSort: sort,
             minPrice: minPrice,
             maxPrice: maxPrice,
-            categories: CATEGORIES,
-            user: req.session.user
+            user: req.session.user || null // Adjust based on how you store user sessions
         });
     });
 });
