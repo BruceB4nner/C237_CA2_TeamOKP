@@ -500,7 +500,6 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
             console.log(err);
             return res.send("Database Error");}
 
-        // 👇 ADD THESE
         console.log("User ID:", userId);
         console.log("Wishlist Results:", results);
 
@@ -520,6 +519,13 @@ app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
             return res.send("Database Error");}
         res.redirect("/wishlist");
 });});
+
+// user profile route (myiesha)
+app.get('/profile', checkAuthenticated, (req, res) => {
+    res.render('profile', {
+        user: req.session.user
+    });
+});
 
 // delete products
 app.post('/products/delete/:id', (req, res) => {
