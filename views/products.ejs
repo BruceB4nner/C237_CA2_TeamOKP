@@ -12,9 +12,20 @@
 
 <div class="container mt-4">
 
-    <!-- SINGLE CLEAN MULTI-FILTER FORM -->
+    <!-- MULTI-FILTER & SEARCH FORM -->
     <div class="bg-light p-3 rounded shadow-sm mb-4">
         <form method="GET" action="/products" class="row g-2 align-items-center" id="searchForm">
+
+            <!-- Search Bar Input -->
+            <div class="col-md-3">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="form-control" 
+                    placeholder="Search products..." 
+                    value="<%= typeof search !== 'undefined' ? search : '' %>"
+                >
+            </div>
 
             <!-- Category Dropdown -->
             <div class="col-md-3">
@@ -55,7 +66,7 @@
 
             <!-- Action Buttons -->
             <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Search</button>
                 <a href="/products" class="btn btn-outline-secondary">Reset</a>
             </div>
         </form>
@@ -66,109 +77,84 @@
         <!-- Empty State -->
         <div class="text-center py-5">
             <div class="alert alert-warning py-4 shadow-sm">
-                <h5 class="fw-bold mb-1">No products match your filters.</h5>
+                <h5 class="fw-bold mb-1">No products match your search or filters.</h5>
                 <p class="mb-0 text-muted">Try clearing your filters or checking your spelling.</p>
-                <a href="/products" class="btn btn-sm btn-primary mt-3">Reset All Filters</a>
+                <a href="/products" class="btn btn-sm btn-primary mt-3">Reset Search</a>
             </div>
         </div>
     <% } else { %>
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="productGrid">
             <% products.forEach(product => { %>
-<div class="col product-card-col" data-name="<%= product.productName.toLowerCase() %>">
+                <div class="col product-card-col">
+                    <div class="card h-100 shadow-sm border-0 position-relative">
 
-    <div class="card h-100 shadow-sm border-0 position-relative">
+                        <!-- Wishlist Heart -->
+                        <% if (user) { %>
+                        <form action="/wishlist/add/<%= product.productId %>" method="POST" style="position:absolute; top:10px; right:10px; z-index:100;">
+                            <button type="submit" class="btn btn-light rounded-circle shadow border-0" title="Add to Wishlist">
+                                ❤️
+                            </button>
+                        </form>
+                        <% } %>
 
-        <!-- Wishlist Heart -->
-        <% if (user) { %>
-        <form action="/wishlist/add/<%= product.productId %>" method="POST"
-              style="position:absolute; top:10px; right:10px; z-index:100;">
-            <button type="submit"
-                    class="btn btn-light rounded-circle shadow border-0"
-                    title="Add to Wishlist">
-                ❤️
-            </button>
-        </form>
-        <% } %>
+                        <!-- Product -->
+                        <a href="/products/<%= product.productId %>" class="text-decoration-none text-dark">
+                            <img src="<%= product.image || 'https://via.placeholder.com/300x180?text=No+Image' %>" class="card-img-top" style="height:190px; object-fit:cover;" alt="<%= product.productName %>">
 
-        <!-- Product -->
-        <a href="/products/<%= product.productId %>"
-           class="text-decoration-none text-dark">
-            <img
-                src="<%= product.image || 'https://via.placeholder.com/300x180?text=No+Image' %>"
-                class="card-img-top"
-                style="height:190px; object-fit:cover;"
-                alt="<%= product.productName %>">
+                            <div class="card-body text-center d-flex flex-column">
+                                <% if (product.category) { %>
+                                    <span class="badge bg-secondary mb-2 text-capitalize align-self-center">
+                                        <%= product.category %>
+                                    </span>
+                                <% } %>
+                                <h5 class="card-title fw-bold">
+                                    <%= product.productName %>
+                                </h5>
+                                <p class="text-danger fw-bold fs-5">
+                                    $<%= parseFloat(product.price).toFixed(2) %>
+                                </p>
+                                <p>
+                                    <small class="text-muted">
+                                        Stock Available: <%= product.stock %>
+                                    </small>
+                                </p>
+                                <span class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product Details
+                                </span>
+                            </div>
+                        </a>
 
-            <div class="card-body text-center d-flex flex-column">
+                        <% if (user) { %>
+                          <form action="/cart/add/<%= product.productId %>" method="POST" class="mt-2">
+                            <button type="submit" class="btn btn-success btn-sm w-100">Add to Cart</button>
+                          </form>
+                        <% } else { %>
+                          <a href="/login" class="btn btn-success btn-sm w-100 mt-2">
+                            Login to Add to Cart
+                          </a>
+                        <% } %>
 
-                <% if (product.category) { %>
-                    <span class="badge bg-secondary mb-2 text-capitalize align-self-center">
-                        <%= product.category %>
-                    </span>
-                <% } %>
-                <h5 class="card-title fw-bold">
-                    <%= product.productName %>
-                </h5>
-                <p class="text-danger fw-bold fs-5">
-                    $<%= parseFloat(product.price).toFixed(2) %>
-                </p>
-                <p>
-                    <small class="text-muted">
-                        Stock Available: <%= product.stock %>
-                    </small>
-                </p>
-                <span class="btn btn-outline-primary btn-sm mt-auto">
-                    View Product Details
-                </span>
-            </div>
-        </a>
-<% if (user) { %>
-  <form action="/cart/add/<%= product.productId %>" method="POST" class="mt-2">
-    <button type="submit" class="btn btn-success btn-sm w-100">Add to Cart </button>
-  </form>
-<% } else { %>
-  <a href="/login" class="btn btn-success btn-sm w-100 mt-2">
-    Login to Add to Cart
-  </a>
-<% } %>
-        <!-- Seller Controls -->
-        <% if (user && user.userId == product.userId) { %>
-        <div class="card-footer bg-light d-flex justify-content-between">
-            <a href="/editProduct/<%= product.productId %>"
-               class="btn btn-warning btn-sm">
-                Edit
-            </a>
-            <form action="/products/delete/<%= product.productId %>"
-                  method="POST">
-                <button
-                    type="submit"
-                    class="btn btn-danger btn-sm"
-                    onclick="return confirm('Delete this listing?')">
-                    Delete
-                </button>
-            </form>
-        </div>
-        <% } %>
+                        <!-- Seller Controls -->
+                        <% if (user && user.userId == product.userId) { %>
+                        <div class="card-footer bg-light d-flex justify-content-between">
+                            <a href="/editProduct/<%= product.productId %>" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="/products/delete/<%= product.productId %>" method="POST">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this listing?')">Delete</button>
+                            </form>
+                        </div>
+                        <% } %>
 
-        <!-- Admin Delete -->
-        <% if (user && user.role === 'admin') { %>
-        <div class="card-footer bg-light">
-
-            <form action="/products/delete/<%= product.productId %>"
-                  method="POST">
-                <button
-                    type="submit"
-                    class="btn btn-danger btn-sm w-100"
-                    onclick="return confirm('Admin: Delete this item?')">
-                    Delete (Admin)
-                </button>
-            </form>
-        </div>
-        <% } %>
-    </div>
-</div>
-<% }) %>
-
+                        <!-- Admin Delete -->
+                        <% if (user && user.role === 'admin') { %>
+                        <div class="card-footer bg-light">
+                            <form action="/products/delete/<%= product.productId %>" method="POST">
+                                <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Admin: Delete this item?')">Delete (Admin)</button>
+                            </form>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
         </div>
     <% } %>
 </div>
