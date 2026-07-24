@@ -327,11 +327,8 @@ app.post('/addProduct', (req, res) => {
     );
 });
 
-app.post('/products/delete/:id', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Forbidden: Admins only');
-    }
-
+app.post('/products/delete/:id',isOwnerOrAdmin, (req, res) => {
+    
     const productId = req.params.id;
     connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
         if (err) throw err;
