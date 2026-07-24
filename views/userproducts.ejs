@@ -16,7 +16,7 @@
     <p>You haven’t listed any products yet.</p>
   <% } else { %>
     <% products.forEach(product => { %>
-    <div class="col product-card-col">
+                <div class="col product-card-col">
                     <div class="card h-100 shadow-sm border-0 position-relative">
 
                         <!-- Wishlist Heart -->
@@ -54,9 +54,32 @@
                                 </span>
                             </div>
                         </a>
+
+                        <% if (user) { %>
+                          <form action="/cart/add/<%= product.productId %>" method="POST" class="mt-2">
+                            <button type="submit" class="btn btn-success btn-sm w-100">Add to Cart</button>
+                          </form>
+                        <% } else { %>
+                          <a href="/login" class="btn btn-success btn-sm w-100 mt-2">
+                            Login to Add to Cart
+                          </a>
+                        <% } %>
+
+                        <!-- Seller Controls -->
+                        <% if (user && user.userId == product.userId) { %>
+                        <div class="card-footer bg-light d-flex justify-content-between">
+                            <a href="/editProduct/<%= product.productId %>" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="/products/delete/<%= product.productId %>" method="POST">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this listing?')">Delete</button>
+                            </form>
+                        </div>
+                        <% } %>
+
                     </div>
-    <% }) %>
-  <% } %>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
 </div>
 
     <%- include('partials/footer.ejs') %>
