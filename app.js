@@ -314,11 +314,7 @@ app.get('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
         res.render("editProduct", {
             product: results[0],
             user: req.session.user
-        });
-
-    });
-
-});
+        });});});
 
 // add product routes (myiesha)
 app.get('/addProduct', (req, res) => {
@@ -332,33 +328,20 @@ app.get('/addProduct', (req, res) => {
 
 app.post('/addProduct', (req, res) => {
     if (!req.session.user) {
-        return res.redirect('/login');
-    }
-
+        return res.redirect('/login');}
     const { productName, category, description, stock, price, image } = req.body;
     const userId = req.session.user.id;
-
     const sql = `
         INSERT INTO products
         (productName, category, description, price, image, stock, userId)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
+        VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
     connection.query(
-        sql,
-        [
-            productName,
-            category,
-            description,
-            price,
-            image,
-            stock,
-            userId
-        ],
+        sql,[productName,category,description,
+            price,image,stock,userId],
         (err) => {
             if (err) throw err;
-            res.redirect('/products');
-        });});
+            res.redirect('/products');});});
 
 //Edit Product (Kai Peng)
 app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
