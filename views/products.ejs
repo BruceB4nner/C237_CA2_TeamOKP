@@ -158,6 +158,33 @@
         </div>
     <% } %>
 </div>
+<!-- Cart Toast -->
+<div class="position-center">
+  <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">Item added to cart</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('form[action^="/cart/add"]').forEach(form => {
+    form.addEventListener('submit', async e => {
+      e.preventDefault(); // stop redirect
+      // send the request via fetch instead of normal form submit
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form)});
+
+      if (res.ok) {
+        const toastEl = document.getElementById('cartToast');
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      } else {
+        alert("❌ Failed to add item to cart.");}});});
+</script>
+
 <br>
 <%- include('partials/footer.ejs') %>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

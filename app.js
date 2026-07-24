@@ -362,7 +362,6 @@ app.post('/addProduct', (req, res) => {
 
 //Edit Product (Kai Peng)
 app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
-
     const productId = req.params.id;
 
     const {
@@ -398,15 +397,8 @@ app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
             productId
         ],
         (err) => {
-
             if (err) throw err;
-
-            res.redirect("/products");
-
-        }
-    );
-
-});
+            res.redirect("/products");});});
 
 // wishlist routes (myiesha)
 app.post('/wishlist/add/:productid', checkAuthenticated, (req, res) => {
@@ -500,6 +492,7 @@ app.get('/kp', (req, res) => { res.render('kaipeng'); });
 app.get('/myiesha', (req, res) => { res.render('myiesha'); });
 app.get('/nx', (req, res) => { res.render('ningxin'); });
 
+// cart stuff (angie)
 app.get('/cart', (req, res) => {
   if (!req.session.user) {return res.redirect('/login');}
 
@@ -517,26 +510,72 @@ app.get('/cart', (req, res) => {
 
     res.render('cart', {
       user: req.session.user,
-      cart: results || []});
-  });
-});
+      cart: results || []});});});
+      
 app.post('/cart/add/:id', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');}
   const userId = req.session.user.id;
   const productId = req.params.id;
-  const sql = `
-    INSERT INTO cart (userId, productId, quantity)
-    VALUES (?, ?, 1)
-    ON DUPLICATE KEY UPDATE quantity = quantity + 1
-  `;
-  connection.query(sql, [userId, productId], (err) => {
+  // Check if product already exists in cart
+  const checkSql = 'SELECT quantity FROM cart WHERE userId = ? AND productId = ?';
+  connection.query(checkSql, [userId, productId], (err, results) => {
     if (err) {
-      console.error('Error adding to cart:', err);
+      console.error('Error checking cart:', err);
       return res.status(500).send('Database error');}
-    req.flash('success', 'Item added to cart!');
-    res.redirect('/products');
-  });});
+    if (results.length > 0) {
+      // Product already in cart → increment quantity
+      const updateSql = 'UPDATE cart SET quantity = quantity + 1 WHERE userId = ? AND productId = ?';
+      connection.query(updateSql, [userId, productId], (err2) => {
+        if (err2) {
+          console.error('Error updating cart:', err2);
+          return res.status(500).send('Database error');}
+        res.redirect('/cart');});
+    } else {
+      // Product not in cart → insert new row
+      const insertSql = 'INSERT INTO cart (userId, productId, quantity) VALUES (?, ?, 1)';
+      connection.query(insertSql, [userId, productId], (err3) => {
+        if (err3) {
+          console.error('Error inserting cart item:', err3);
+          return res.status(500).send('Database error');
+        }
+        res.redirect('/cart');});}});});
+
+//remove item from cart 
+ app.post('/cart/remove/:id', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');}
+  const userId = req.session.user.id;
+  const productId = req.params.id;
+  // Check current quantity
+  const checkSql = 'SELECT quantity FROM cart WHERE userId = ? AND productId = ?';
+  connection.query(checkSql, [userId, productId], (err, results) => {
+    if (err) {
+      console.error('Error checking cart item:', err);
+      return res.status(500).send('Database error');}
+    if (results.length === 0) {
+      return res.redirect('/cart');}
+
+    const currentQty = results[0].quantity;
+    if (currentQty > 1) {
+      // Decrement instead of delete
+      const updateSql = 'UPDATE cart SET quantity = quantity - 1 WHERE userId = ? AND productId = ?';
+      connection.query(updateSql, [userId, productId], (err2) => {
+        if (err2) {
+          console.error('Error updating cart item:', err2);
+          return res.status(500).send('Database error');
+        }
+        res.redirect('/cart');
+      });} else {
+    
+      const deleteSql = 'DELETE FROM cart WHERE userId = ? AND productId = ?';
+      connection.query(deleteSql, [userId, productId], (err3) => {
+        if (err3) {
+          console.error('Error deleting cart item:', err3);
+          return res.status(500).send('Database error');
+        }
+        res.redirect('/cart');});}});});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
