@@ -41,9 +41,7 @@
           <!-- Right: Product info + review -->
           <div class="col-md-6">
             <h4 class="fw-bold"><%= product.productName %></h4>
-            <p class="fst-italic text-muted">
-    "<%= product.comment %>"
-</p>
+            <p class="fst-italic text-muted">"<%= product.comment || 'No review yet.' %>"</p>
 
 <p class="text-warning">
     <% for(let i = 0; i < product.rating; i++) { %>★<% } %>
