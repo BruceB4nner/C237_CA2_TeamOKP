@@ -8,7 +8,7 @@
 
 <body>
     <%- include ('partials/header.ejs')%>
-        <div class="container">
+        <div class="container register-card">
             <h1 class="mt-5">Register</h1>
             <% if (messages && messages.length> 0) { %>
                 <div class="alert alert-danger">
@@ -61,12 +61,12 @@
                         </div>
 
                         <script>
-  // Show/hide admin code field based on role selection
-  document.getElementById('role').addEventListener('change', function() {
-    const adminField = document.getElementById('adminCodeField');
-    adminField.style.display = (this.value === 'admin') ? 'block' : 'none';
-  });
-</script>
+                            // Show/hide admin code field based on role selection
+                            document.getElementById('role').addEventListener('change', function() {
+                                const adminField = document.getElementById('adminCodeField');
+                                adminField.style.display = (this.value === 'admin') ? 'block' : 'none';
+                            });
+                            </script>
 <br>
                         <button type="submit" class="btn btn-primary">Register</button>
                     </form>
