@@ -127,31 +127,16 @@
   <% } %>
 
 
-  <!-- Admin Delete -->
-  <% if (user && user.role === 'admin') { %>
-  <div class="card-footer bg-light">
-    <form action="/products/delete/<%= product.productId %>" method="POST">
-      <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Admin: Delete this item?')">Delete (Admin)</button>
-    </form>
-  </div>
-  <% } %>
+                <!-- Admin Delete -->
+                <% if (user && user.role === 'admin') { %>
+                <div class="card-footer bg-light">
+                    <form action="/products/delete/<%= product.productId %>" method="POST">
+                    <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Admin: Delete this item?')">Delete (Admin)</button>
+                    </form>
+                </div>
+                <% } %>
 
-
-
-   <!-- User Delete -->
-  <% if (user && user.id === product.userId && user.role !== 'admin') { %>
-  <div class="card-footer bg-light">
-    <form action="/products/delete/<%= product.productId %>" method="POST">
-      <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Delete this item?')">Delete</button>
-    </form>
-  </div>
-  <% } %>
-</div>
-
-
-
-
-
+                </div>
                 </div>
             <% }) %>
         </div>
@@ -175,10 +160,16 @@
       // send the request via fetch instead of normal form submit
       const res = await fetch(form.action, {method: 'POST',body: new FormData(form)});
 
-      if (res.ok) {const toastEl = document.getElementById('cartToast');
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();} 
-        else {alert("Product is unavailable.");}});});
+     if (res.ok) {
+  const toastEl = document.getElementById('cartToast');
+  const toast = new bootstrap.Toast(toastEl);
+  toast.show();
+} else {
+  const msg = await res.text(); // get server’s message
+  alert(msg); // shows either "You cannot buy your own product." or "This product is out of stock."
+}
+
+        });});
 </script>
 
 <br>

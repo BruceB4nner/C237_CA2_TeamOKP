@@ -304,7 +304,6 @@ body.ningxin-page::after {
   padding: 10px;
 }
 
-/* Green text hover only for Add to Cart button */
-.btn-outline-primary.add-to-cart:hover {
-  background-color: #198754 !important; /* Bootstrap green */
-}
+
+.btn-outline-primary.add-to-cart:hover {background-color: #1eb471 !important;}
+.add-to-cart {background-color: #45b08594 !important;}

@@ -524,19 +524,34 @@ app.get('/profile', checkAuthenticated, (req, res) => {
     });
 });
 
-// delete products
 app.post('/products/delete/:id', (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Forbidden: Admins only');}
-    const productId = req.params.id;
-    const sql = `
-        DELETE FROM products
-        WHERE productId = ?
-    `;
-    connection.query(sql, [productId], (err) => {
-        if (err) throw err;
-        req.flash('success', 'Product deleted successfully');
-        res.redirect('/products');});});
+  if (!req.session.user) {
+    return res.status(401).send('Unauthorized: Please log in');
+  }
+
+  const userId = req.session.user.id;
+  const isAdmin = req.session.user.role === 'admin';
+  const productId = req.params.id;
+
+  // First fetch the product to check ownership
+  connection.query('SELECT userId FROM products WHERE productId = ?', [productId], (err, results) => {
+    if (err) return res.status(500).send('Database error');
+    if (results.length === 0) return res.status(404).send('Product not found');
+
+    const ownerId = results[0].userId;
+
+    // block if not admin/owner of listing 
+    if (!isAdmin && ownerId !== userId) {
+      return res.status(403).send('Forbidden: You can only delete your own products');
+    }
+
+    // allow remove
+    const sql = 'DELETE FROM products WHERE productId = ?';
+    connection.query(sql, [productId], (err2) => {
+      if (err2) return res.status(500).send('Database error');
+      req.flash('success', 'Product deleted successfully');
+      res.redirect('/products');});});});
+
 
 //angies routes all below (i think)
 app.get('/angie', (req, res) => { res.render('angie'); });
@@ -566,35 +581,37 @@ app.post('/cart/add/:id', (req, res) => {
   const userId = req.session.user.id;
   const productId = req.params.id;
 
-  // Check product stock first
-  connection.query('SELECT stock, userId FROM products WHERE productId = ?', [productId], (err, results) => {
-    if (err) return res.status(500).send('Database error');
-    if (results.length === 0) return res.status(404).send('Product not found');
-    if (results[0].userId === userId) {
-    return res.status(400).send('You cannot buy your own product');
-    }
+  connection.query(
+    'SELECT stock, userId FROM products WHERE productId = ?',
+    [productId],
+    (err, results) => {
+      if (err) return res.status(500).send('Database error');
+      if (results.length === 0) return res.status(404).send('Product not found');
 
-    const stock = results[0].stock;
-    const sellerId = results[0].userId;
+      const stock = results[0].stock;
+      const sellerId = results[0].userId;
 
-    if (sellerId == userId) {
-    return res.status(400).send('You cannot buy your own product.');
-    }
-    if (stock <= 0) {
-      return res.status(400).send('This product is out of stock');
-    }
-const sql = `
-  INSERT INTO cart (userId, productId, quantity)
-  VALUES (?, ?, 1)
-  ON DUPLICATE KEY UPDATE quantity = quantity + 1
-`;
-connection.query(sql, [userId, productId], (err2) => {
-  if (err2) return res.status(500).send('Database error');
-  res.redirect('/cart');
-});
+      //prevent adding own listing
+      if (sellerId === userId) {
+        return res.status(403).send('You cannot buy your own product.');
+      }
 
-  });
-});
+      //prevent adding product with no qty
+      if (stock <= 0) {
+        return res.status(400).send('This product is out of stock.');
+      }
+
+      // add to cart 
+      const sql = `
+        INSERT INTO cart (userId, productId, quantity)
+        VALUES (?, ?, 1)
+        ON DUPLICATE KEY UPDATE quantity = quantity + 1
+      `;
+      connection.query(sql, [userId, productId], (err2) => {
+        if (err2) return res.status(500).send('Database error');
+        res.redirect('/cart');});});});
+
+
 
 
 //remove item from cart 
