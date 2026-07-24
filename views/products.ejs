@@ -140,7 +140,7 @@
 
 
 <!-- User Delete -->
-  <% if (user && user.id === product.userId { %>
+  <% if (user && user.id === product.userId) { %>
   <div class="card-footer bg-light">
     <form action="/products/delete/<%= product.productId %>" method="POST">
       <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Delete this item?')">Delete</button>
