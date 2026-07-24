@@ -123,15 +123,16 @@
                             </div>
                         </a>
 
-                        <% if (user) { %>
-                          <form action="/cart/add/<%= product.productId %>" method="POST" class="mt-2">
-                            <button type="submit" class="btn btn-success btn-sm w-100">Add to Cart</button>
-                          </form>
-                        <% } else { %>
-                          <a href="/login" class="btn btn-success btn-sm w-100 mt-2">
-                            Login to Add to Cart
-                          </a>
-                        <% } %>
+<% if (user) { %>
+  <form action="/cart/add/<%= product.productId %>" method="POST" class="mt-2">
+    <button type="submit" class="btn btn-outline-primary btn-sm w-100">Add to Cart</button>
+  </form>
+<% } else { %>
+  <a href="/login" class="btn btn-outline-primary add-to-cart btn-sm w-100 mt-2">
+    Login to Add to Cart
+  </a>
+<% } %>
+
 
                         <!-- Seller Controls -->
                         <% if (user && user.userId == product.userId) { %>
