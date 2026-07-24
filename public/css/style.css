@@ -10,6 +10,16 @@ p{
   font-style: italic;
 }
 /*angie - testing google fonts will style everything later*/
+.card,
+.product-card-col {
+  overflow: visible !important;
+}
+.card {
+  position: relative !important;
+}
+.dropdown-menu {
+  z-index: 3000 !important;
+}
 
 html,body{height: 100%;}
 body {display: flex;flex-direction: column;min-height: 100vh;}
