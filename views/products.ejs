@@ -126,15 +126,6 @@
     </a>
   <% } %>
 
-  <!-- Seller Controls -->
-  <% if (user && user.userId == product.userId) { %>
-  <div class="card-footer bg-light d-flex justify-content-between">
-    <a href="/editProduct/<%= product.productId %>" class="btn btn-warning btn-sm">Edit</a>
-    <form action="/products/delete/<%= product.productId %>" method="POST">
-      <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this listing?')">Delete</button>
-    </form>
-  </div>
-  <% } %>
 
   <!-- Admin Delete -->
   <% if (user && user.role === 'admin') { %>
