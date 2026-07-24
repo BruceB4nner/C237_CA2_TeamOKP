@@ -52,6 +52,8 @@
                             <select id="role" name="role" class="form-control" required>
                                 <option value="user" <% if (formData && formData.role==='user' ) { %> selected <% } %>
                                         >User</option>
+                                <option value="admin" <% if (formData && formData.role==='admin' ) { %> selected <% } %>
+                                        >Admin</option>
                             </select>
                         </div>
                         <div class="form-group" id="adminCodeField" style="display:none;">

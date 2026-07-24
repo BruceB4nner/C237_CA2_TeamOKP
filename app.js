@@ -231,7 +231,12 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', validateRegistration, (req, res) => {
-    const { username, email, password, address, contact, role } = req.body;
+    const { username, email, password, address, contact, role, adminCode } = req.body;
+
+    if (role === 'admin' && adminCode !== '6767') {
+        req.flash('error', 'Invalid admin code.');
+        return res.redirect('/register');
+    }
 
     const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA2(?, 256), ?, ?, ?)';
     connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
