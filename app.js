@@ -128,35 +128,47 @@ const validateRegistration = (req, res, next) => {
 
 // NING XIN: HOMEPAGE ROUTE (Carousel + Categories)
 app.get('/', (req, res) => {
-    const sqlProducts = 'SELECT * FROM products WHERE stock > 0';
-    const sqlReviews = `
-        SELECT r.*, u.username, p.productName AS product_name 
-        FROM reviews r 
-        JOIN users u ON r.user_id = u.id 
-        JOIN products p ON r.product_id = p.productId 
+
+    const sql = `
+        SELECT
+            p.*,
+            r.rating,
+            r.comment,
+            u.username
+        FROM products p
+        JOIN reviews r
+            ON p.productId = r.productId
+        JOIN users u
+            ON r.userId = u.id
+        WHERE p.stock > 0
+        ORDER BY r.reviewId DESC
         LIMIT 4
     `;
 
-    connection.query(sqlProducts, (err, products) => {
+    connection.query(sql, (err, results) => {
+
         if (err) {
-            console.error('Error fetching products for homepage:', err);
-            products = [];
-        }
-
-        connection.query(sqlReviews, (err, reviews) => {
-            if (err) {
-                reviews = [];
-            }
-
-            res.render('index', {
+            console.error('Error fetching homepage:', err);
+            
+            return res.render('index', {
                 user: req.session.user,
                 messages: req.flash('success'),
-                products: products || [],
-                reviews: reviews || [],
+                products: [],
                 categories: CATEGORIES
             });
+        }
+
+        console.log(results);
+
+        res.render('index', {
+            user: req.session.user,
+            messages: req.flash('success'),
+            products: results,
+            categories: CATEGORIES
         });
+
     });
+
 });
 
 

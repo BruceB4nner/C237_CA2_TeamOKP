@@ -40,9 +40,17 @@
 
           <!-- Right: Product info + review -->
           <div class="col-md-6">
-            <h4 class="fw-bold"><%= product.title || product.name %></h4>
-            <p class="fst-italic text-muted">"<%= product.review || 'No review yet.' %>"</p>
-            <a href="/products/<%= product.id %>" class="btn btn-primary btn-sm mt-2">View Product</a>
+            <h4 class="fw-bold"><%= product.productName %></h4>
+            <p class="fst-italic text-muted">
+    "<%= product.comment %>"
+</p>
+
+<p class="text-warning">
+    <% for(let i = 0; i < product.rating; i++) { %>★<% } %>
+</p>
+
+<small>— <%= product.username %></small>
+            <a href="/products/<%= product.productId %>" class="btn btn-primary btn-sm mt-2">View Product</a>
           </div>
         </div>
       </div>
