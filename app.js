@@ -562,11 +562,19 @@ app.post('/cart/add/:id', (req, res) => {
   const productId = req.params.id;
 
   // Check product stock first
-  connection.query('SELECT stock FROM products WHERE productId = ?', [productId], (err, results) => {
+  connection.query('SELECT stock, userId FROM products WHERE productId = ?', [productId], (err, results) => {
     if (err) return res.status(500).send('Database error');
     if (results.length === 0) return res.status(404).send('Product not found');
+    if (results[0].userId === userId) {
+    return res.status(400).send('You cannot buy your own product');
+    }
 
     const stock = results[0].stock;
+    const sellerId = results[0].userId;
+
+    if (sellerId == userId) {
+    return res.status(400).send('You cannot buy your own product.');
+    }
     if (stock <= 0) {
       return res.status(400).send('This product is out of stock');
     }
