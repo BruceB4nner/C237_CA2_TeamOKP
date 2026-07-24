@@ -226,7 +226,6 @@ body.ningxin-page::after {
 #productGrid.list-view .card {
   flex-direction: row !important;
   align-items: center;
-  overflow: hidden;
 }
 #productGrid.list-view .product-card-link {
   flex-direction: row !important;
@@ -265,3 +264,4 @@ body.ningxin-page::after {
     width: 100% !important;
   }
 }
+
