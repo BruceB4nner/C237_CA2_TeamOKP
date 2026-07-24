@@ -128,28 +128,12 @@ const validateRegistration = (req, res, next) => {
 
 // NING XIN: HOMEPAGE ROUTE (Carousel + Categories)
 app.get('/', (req, res) => {
-
-    const sql = `
-        SELECT
-            p.*,
-            r.rating,
-            r.comment,
-            u.username
-        FROM products p
-        JOIN reviews r
-            ON p.productId = r.productId
-        JOIN users u
-            ON r.userId = u.id
-        WHERE p.stock > 0
-        ORDER BY r.reviewId DESC
-        LIMIT 4
-    `;
+    // Fetch ALL products that are in stock (not just ones with reviews)
+    const sql = "SELECT * FROM products WHERE stock > 0";
 
     connection.query(sql, (err, results) => {
-
         if (err) {
             console.error('Error fetching homepage:', err);
-            
             return res.render('index', {
                 user: req.session.user,
                 messages: req.flash('success'),
@@ -158,17 +142,13 @@ app.get('/', (req, res) => {
             });
         }
 
-        console.log(results);
-
         res.render('index', {
             user: req.session.user,
             messages: req.flash('success'),
             products: results,
             categories: CATEGORIES
         });
-
     });
-
 });
 
 
