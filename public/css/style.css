@@ -274,4 +274,35 @@ body.ningxin-page::after {
     width: 100% !important;
   }
 }
+.register-card {
+  max-width: 600px;
+  margin: 50px auto;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 35px 35px;
+  margin-top:20px;
+}
+
+.register-card h1 {
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.register-card .form-group {
+  margin-bottom: 15px;
+}
+
+.register-card .form-control {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.register-card .btn-primary {
+  width: 100%;
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 10px;
+}
 

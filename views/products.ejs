@@ -157,8 +157,8 @@
         </div>
     <% } %>
 </div>
-<!-- toast thingy when user adds stuff to cart -->
-<div class="position-center">
+<!-- Toast thingy -->
+<div class="position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 1055">
   <div id="cartToast" class="toast align-items-center text-bg-success border-0" role="alert">
     <div class="d-flex">
       <div class="toast-body">Item added to cart</div>
@@ -166,6 +166,7 @@
     </div>
   </div>
 </div>
+
 
 <script>
   document.querySelectorAll('form[action^="/cart/add"]').forEach(form => {
