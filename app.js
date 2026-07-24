@@ -125,9 +125,8 @@ const validateRegistration = (req, res, next) => {
     next();
 };
 
-// ==========================================
-// NING XIN: HOMEPAGE ROUTE (Carousel + Reviews + Categories)
-// ==========================================
+
+// NING XIN: HOMEPAGE ROUTE (Carousel + Categories)
 app.get('/', (req, res) => {
     const sqlProducts = 'SELECT * FROM products WHERE stock > 0';
     const sqlReviews = `
@@ -160,9 +159,9 @@ app.get('/', (req, res) => {
     });
 });
 
-// ==========================================
+
 // NING XIN: PRODUCT VIEWING, CATEGORY FILTERING, SORTING & PRICE RANGE
-// ==========================================
+
 app.get('/products', (req, res) => {
     let sql = "SELECT * FROM products WHERE 1=1";
     let params = [];
@@ -227,6 +226,7 @@ app.get('/products', (req, res) => {
     });
 });
 
+//josh//
 app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
 });
