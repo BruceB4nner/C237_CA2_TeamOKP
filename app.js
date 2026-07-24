@@ -471,24 +471,32 @@ app.get('/cart', (req, res) => {if (!req.session.user) {return res.redirect('/lo
 
 app.post('/cart/add/:id', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
+
   const userId = req.session.user.id;
   const productId = req.params.id;
 
-  // Check stock
+  // Check product stock first
   connection.query('SELECT stock FROM products WHERE productId = ?', [productId], (err, results) => {
     if (err) return res.status(500).send('Database error');
     if (results.length === 0) return res.status(404).send('Product not found');
+
     const stock = results[0].stock;
     if (stock <= 0) {
-      // Prevent adding sold‑out product
-      return res.status(400).send('This product is out of stock');}
+      return res.status(400).send('This product is out of stock');
+    }
+const sql = `
+  INSERT INTO cart (userId, productId, quantity)
+  VALUES (?, ?, 1)
+  ON DUPLICATE KEY UPDATE quantity = quantity + 1
+`;
+connection.query(sql, [userId, productId], (err2) => {
+  if (err2) return res.status(500).send('Database error');
+  res.redirect('/cart');
+});
 
-    connection.query(
-      'INSERT INTO cart (userId, productId, quantity) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE quantity = quantity + 1',
-      [userId, productId],
-      (err2) => {
-        if (err2) return res.status(500).send('Database error');
-        res.redirect('/cart');});});});
+  });
+});
+
 
 //remove item from cart 
  app.post('/cart/remove/:id', (req, res) => {

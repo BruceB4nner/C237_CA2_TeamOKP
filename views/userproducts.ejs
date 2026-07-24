@@ -10,7 +10,55 @@
 <body>
     <%- include('partials/header.ejs') %>
 
-    
+    <h2 class="mb-4">My Listings</h2>
+<div class="row">
+  <% if (products.length === 0) { %>
+    <p>You haven’t listed any products yet.</p>
+  <% } else { %>
+    <% products.forEach(product => { %>
+    <div class="col product-card-col">
+                    <div class="card h-100 shadow-sm border-0 position-relative">
+
+                        <!-- Wishlist Heart -->
+                        <% if (user) { %>
+                        <form action="/wishlist/add/<%= product.productId %>" method="POST" style="position:absolute; top:10px; right:10px; z-index:100;">
+                            <button type="submit" class="btn btn-light rounded-circle shadow border-0" title="Add to Wishlist">
+                                ❤️
+                            </button>
+                        </form>
+                        <% } %>
+
+                        <!-- Product -->
+                        <a href="/products/<%= product.productId %>" class="text-decoration-none text-dark">
+                            <img src="<%= product.image %>" class="card-img-top" style="height:190px; object-fit:cover;" alt="<%= product.productName %>">
+
+                            <div class="card-body text-center d-flex flex-column">
+                                <% if (product.category) { %>
+                                    <span class="badge bg-secondary mb-2 text-capitalize align-self-center">
+                                        <%= product.category %>
+                                    </span>
+                                <% } %>
+                                <h5 class="card-title fw-bold">
+                                    <%= product.productName %>
+                                </h5>
+                                <p class="text-danger fw-bold fs-5">
+                                    $<%= parseFloat(product.price).toFixed(2) %>
+                                </p>
+                                <p>
+                                    <small class="text-muted">
+                                        Stock Available: <%= product.stock %>
+                                    </small>
+                                </p>
+                                <span class="btn btn-outline-primary btn-sm mt-auto">
+                                    View Product Details
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+    <% }) %>
+  <% } %>
+</div>
+
     <%- include('partials/footer.ejs') %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
