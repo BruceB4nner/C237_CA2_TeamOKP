@@ -128,35 +128,47 @@ const validateRegistration = (req, res, next) => {
 
 // NING XIN: HOMEPAGE ROUTE (Carousel + Categories)
 app.get('/', (req, res) => {
-    const sqlProducts = 'SELECT * FROM products WHERE stock > 0';
-    const sqlReviews = `
-        SELECT r.*, u.username, p.productName AS product_name 
-        FROM reviews r 
-        JOIN users u ON r.user_id = u.id 
-        JOIN products p ON r.product_id = p.productId 
+
+    const sql = `
+        SELECT
+            p.*,
+            r.rating,
+            r.comment,
+            u.username
+        FROM products p
+        JOIN reviews r
+            ON p.productId = r.productId
+        JOIN users u
+            ON r.userId = u.id
+        WHERE p.stock > 0
+        ORDER BY r.reviewId DESC
         LIMIT 4
     `;
 
-    connection.query(sqlProducts, (err, products) => {
+    connection.query(sql, (err, results) => {
+
         if (err) {
-            console.error('Error fetching products for homepage:', err);
-            products = [];
-        }
-
-        connection.query(sqlReviews, (err, reviews) => {
-            if (err) {
-                reviews = [];
-            }
-
-            res.render('index', {
+            console.error('Error fetching homepage:', err);
+            
+            return res.render('index', {
                 user: req.session.user,
                 messages: req.flash('success'),
-                products: products || [],
-                reviews: reviews || [],
+                products: [],
                 categories: CATEGORIES
             });
+        }
+
+        console.log(results);
+
+        res.render('index', {
+            user: req.session.user,
+            messages: req.flash('success'),
+            products: results,
+            categories: CATEGORIES
         });
+
     });
+
 });
 
 
@@ -271,16 +283,92 @@ app.get('/logout', (req, res) => {
 // angie - change the render to productDetails
 app.get('/products/:id', (req, res) => {
     const productId = req.params.id;
-    const sql = 'SELECT * FROM products WHERE productId = ?';
+
+    const sql = `
+        SELECT * FROM products 
+        WHERE productId = ?
+    `;
 
     connection.query(sql, [productId], (err, results) => {
+
         if (err) throw err;
 
         if (results.length === 0) {
-            return res.status(404).send('Product not found')}
+            return res.status(404).send('Product not found');
+        }
+
 
         const product = results[0];
-        res.render('productDetails', { product, user: req.session.user });
+
+
+        const reviewSql = `
+            SELECT r.*, u.username
+            FROM reviews r
+            JOIN users u 
+            ON r.userId = u.id
+            WHERE r.productId = ?
+        `;
+
+
+        connection.query(reviewSql, [productId], (err, reviews) => {
+
+            if (err) throw err;
+
+
+            let canReview = false;
+
+
+            // Check if user bought this product
+            if(req.session.user){
+
+                const purchaseSql = `
+                    SELECT *
+                    FROM orders
+                    WHERE userId = ?
+                    AND productId = ?
+                `;
+
+
+                connection.query(
+                    purchaseSql,
+                    [
+                        req.session.user.id,
+                        productId
+                    ],
+                    (err, orders)=>{
+
+                        if(err) throw err;
+
+
+                        if(orders.length > 0){
+                            canReview = true;
+                        }
+
+
+                        res.render('productDetails',{
+                            product: product,
+                            reviews: reviews,
+                            user:req.session.user,
+                            canReview:canReview
+                        });
+
+                    }
+                );
+
+
+            }else{
+
+                res.render('productDetails',{
+                    product:product,
+                    reviews:reviews,
+                    user:null,
+                    canReview:false
+                });
+
+            }
+
+        });
+
     });
 });
 
@@ -412,7 +500,6 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
             console.log(err);
             return res.send("Database Error");}
 
-        // 👇 ADD THESE
         console.log("User ID:", userId);
         console.log("Wishlist Results:", results);
 
@@ -432,6 +519,13 @@ app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
             return res.send("Database Error");}
         res.redirect("/wishlist");
 });});
+
+// user profile route (myiesha)
+app.get('/profile', checkAuthenticated, (req, res) => {
+    res.render('profile', {
+        user: req.session.user
+    });
+});
 
 // delete products
 app.post('/products/delete/:id', (req, res) => {
@@ -577,29 +671,68 @@ app.post('/checkout', (req, res) => {
       return new Promise((resolve, reject) => {
         const newStock = item.stock - item.quantity;
 
-        if (newStock > 0) {
-          // reeduce stock
-          connection.query(
-            'UPDATE products SET stock = ? WHERE productId = ?',
-            [newStock, item.productId],
-            err2 => (err2 ? reject(err2) : resolve())
-          );
-        } else {
-          // out of stock
-          connection.query(
-            'UPDATE products SET stock = 0 WHERE productId = ?',
-            [item.productId],
-            err3 => (err3 ? reject(err3) : resolve()));}});});
+        connection.query(
+          'UPDATE products SET stock = ? WHERE productId = ?',
+          [Math.max(newStock, 0), item.productId],
+          err2 => {
+            if (err2) {
+              reject(err2);
+            } else {
+              resolve();
+            }
+          }
+        );
+      });
+    });
 
-    //after checkout
-    Promise.all(updates).then(() => {
-        connection.query('DELETE FROM cart WHERE userId = ?', [userId], err4 => {
-          if (err4) return res.status(500).send('Database error');
-          res.render('checkout-success', { address });});})
-      .catch(err5 => {
-        console.error('Error during checkout:', err5);
-        res.status(500).send('Checkout failed');});});});
 
+    Promise.all(updates)
+.then(() => {
+
+    const orderValues = items.map(item => [
+        userId,
+        item.productId,
+        item.quantity
+    ]);
+
+    console.log("ORDER VALUES:", orderValues);
+
+    const orderSql = `
+        INSERT INTO orders
+        (userId, productId, quantity)
+        VALUES ?
+    `;
+
+    connection.query(orderSql, [orderValues], (errOrder) => {
+
+        if (errOrder) {
+            console.log(errOrder);
+            return res.status(500).send("Saving order failed");
+        }
+
+        connection.query(
+            'DELETE FROM cart WHERE userId = ?',
+            [userId],
+            err4 => {
+
+                if (err4) {
+                    return res.status(500).send('Database error');
+                }
+
+                res.render('checkout-success', { address });
+
+            }
+        );
+
+    });
+
+})
+.catch(err5 => {
+    console.error('Error during checkout:', err5);
+    res.status(500).send('Checkout failed');
+});
+    });
+});
 // Show only logged in users listings
 app.get('/userproducts', (req, res) => {if (!req.session.user) {
     return res.redirect('/login');}
@@ -613,6 +746,52 @@ app.get('/userproducts', (req, res) => {if (!req.session.user) {
 
     res.render('userproducts', {user: req.session.user,products: results});});});
 
+app.post('/review/:id', checkAuthenticated, (req,res)=>{
+
+
+    const productId = req.params.id;
+
+    const userId = req.session.user.id;
+
+
+    const {
+        rating,
+        comment
+    } = req.body;
+
+
+
+    const sql = `
+        INSERT INTO reviews
+        (userId, productId, rating, comment)
+        VALUES (?, ?, ?, ?)
+        `;
+
+
+    connection.query(
+        sql,
+        [
+            userId,
+            productId,
+            rating,
+            comment
+        ],
+        (err)=>{
+
+
+            if(err){
+                console.log(err);
+                return res.status(500).send("Review failed");
+            }
+
+
+            res.redirect('/products/' + productId);
+
+        }
+    );
+
+
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
