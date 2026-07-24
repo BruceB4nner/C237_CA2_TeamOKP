@@ -511,7 +511,7 @@ app.get('/cart', (req, res) => {
     res.render('cart', {
       user: req.session.user,
       cart: results || []});});});
-      
+
 app.post('/cart/add/:id', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/login');}
@@ -544,21 +544,28 @@ app.post('/cart/add/:id', (req, res) => {
 //remove item from cart 
  app.post('/cart/remove/:id', (req, res) => {
   if (!req.session.user) {
-    return res.redirect('/login');}
+    return res.redirect('/login');
+  }
+
   const userId = req.session.user.id;
   const productId = req.params.id;
+
   // Check current quantity
   const checkSql = 'SELECT quantity FROM cart WHERE userId = ? AND productId = ?';
   connection.query(checkSql, [userId, productId], (err, results) => {
     if (err) {
       console.error('Error checking cart item:', err);
-      return res.status(500).send('Database error');}
-    if (results.length === 0) {
-      return res.redirect('/cart');}
+      return res.status(500).send('Database error');
+    }
 
-    const currentQty = results[0].quantity;
-    if (currentQty > 1) {
-      // Decrement instead of delete
+    if (results.length === 0) {
+      return res.redirect('/cart'); // nothing to remove
+    }
+
+    const qty = results[0].quantity;
+
+    if (qty > 1) {
+      // Decrement quantity
       const updateSql = 'UPDATE cart SET quantity = quantity - 1 WHERE userId = ? AND productId = ?';
       connection.query(updateSql, [userId, productId], (err2) => {
         if (err2) {
@@ -566,15 +573,86 @@ app.post('/cart/add/:id', (req, res) => {
           return res.status(500).send('Database error');
         }
         res.redirect('/cart');
-      });} else {
-    
+      });
+    } else {
+      // Delete row if only 1 left
       const deleteSql = 'DELETE FROM cart WHERE userId = ? AND productId = ?';
       connection.query(deleteSql, [userId, productId], (err3) => {
         if (err3) {
           console.error('Error deleting cart item:', err3);
           return res.status(500).send('Database error');
         }
-        res.redirect('/cart');});}});});
+        res.redirect('/cart');
+      });
+    }
+  });
+});
+
+// GET route for checkout page
+app.get('/checkout', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');}
+
+  const userId = req.session.user.id;
+  const sql = `
+    SELECT c.productId, c.quantity, p.productName, p.price, p.image
+    FROM cart c
+    JOIN products p ON c.productId = p.productId
+WHERE c.userId = ?`;
+  connection.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching cart items:', err);
+      return res.status(500).send('Database error');}
+
+    res.render('checkout', {
+      user: req.session.user,
+      cart: results});});});
+      
+//checkout
+app.post('/checkout', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+
+  const userId = req.session.user.id;
+  const { address, cardNumber, expiry, cvv } = req.body;
+
+  if (!cardNumber || !expiry || !cvv) {
+    return res.status(400).send('Invalid payment details');}
+
+  const cartSql = `SELECT c.productId, c.quantity, p.stock
+    FROM cart c
+    JOIN products p ON c.productId = p.productId
+    WHERE c.userId = ?`;
+  connection.query(cartSql, [userId], (err, items) => {
+    if (err) return res.status(500).send('Database error');
+
+    const updates = items.map(item => {
+      return new Promise((resolve, reject) => {
+        const newStock = item.stock - item.quantity;
+
+        if (newStock > 0) {
+          // reduce qty if >0
+          connection.query(
+            'UPDATE products SET stock = ? WHERE productId = ?',
+            [newStock, item.productId],
+            err2 => (err2 ? reject(err2) : resolve())
+          );
+        } else {
+          // mark product as out of stock once it hits 0
+          connection.query(
+            'UPDATE products SET stock = 0 WHERE productId = ?',
+            [item.productId],
+            err3 => (err3 ? reject(err3) : resolve()));}});});
+
+    Promise.all(updates)
+      .then(() => {
+        // clear cart after checkout (reduce qty)
+        connection.query('DELETE FROM cart WHERE userId = ?', [userId], err4 => {
+          if (err4) return res.status(500).send('Database error');
+          res.render('checkout-success', { address });});})
+      .catch(err5 => {
+        console.error('Error during checkout:', err5);
+        res.status(500).send('Checkout failed');});});});
+
 
 
 const PORT = process.env.PORT || 3000;
