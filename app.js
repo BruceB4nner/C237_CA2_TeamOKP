@@ -464,27 +464,17 @@ app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
 
 // delete products
 app.post('/products/delete/:id', (req, res) => {
-
     if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Forbidden: Admins only');
-    }
-
+        return res.status(403).send('Forbidden: Admins only');}
     const productId = req.params.id;
-
     const sql = `
         DELETE FROM products
         WHERE productId = ?
     `;
-
     connection.query(sql, [productId], (err) => {
-
         if (err) throw err;
-
         req.flash('success', 'Product deleted successfully');
-        res.redirect('/products');
-    });
-
-});
+        res.redirect('/products');});});
 
 app.get('/angie', (req, res) => { res.render('angie'); });
 app.get('/josh', (req, res) => { res.render('josh'); });
@@ -513,67 +503,56 @@ app.get('/cart', (req, res) => {
       cart: results || []});});});
 
 app.post('/cart/add/:id', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');}
+  if (!req.session.user) return res.redirect('/login');
+
   const userId = req.session.user.id;
   const productId = req.params.id;
-  // Check if product already exists in cart
-  const checkSql = 'SELECT quantity FROM cart WHERE userId = ? AND productId = ?';
-  connection.query(checkSql, [userId, productId], (err, results) => {
-    if (err) {
-      console.error('Error checking cart:', err);
-      return res.status(500).send('Database error');}
-    if (results.length > 0) {
-      // Product already in cart → increment quantity
-      const updateSql = 'UPDATE cart SET quantity = quantity + 1 WHERE userId = ? AND productId = ?';
-      connection.query(updateSql, [userId, productId], (err2) => {
-        if (err2) {
-          console.error('Error updating cart:', err2);
-          return res.status(500).send('Database error');}
-        res.redirect('/cart');});
-    } else {
-      // Product not in cart → insert new row
-      const insertSql = 'INSERT INTO cart (userId, productId, quantity) VALUES (?, ?, 1)';
-      connection.query(insertSql, [userId, productId], (err3) => {
-        if (err3) {
-          console.error('Error inserting cart item:', err3);
-          return res.status(500).send('Database error');
-        }
-        res.redirect('/cart');});}});});
+
+  // Check product stock first
+  connection.query('SELECT stock FROM products WHERE productId = ?', [productId], (err, results) => {
+    if (err) return res.status(500).send('Database error');
+    if (results.length === 0) return res.status(404).send('Product not found');
+
+    const stock = results[0].stock;
+
+    if (stock <= 0) {
+      // Prevent adding sold‑out product
+      return res.status(400).send('This product is out of stock');
+    }
+
+    // Otherwise proceed to add to cart
+    connection.query(
+      'INSERT INTO cart (userId, productId, quantity) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE quantity = quantity + 1',
+      [userId, productId],
+      (err2) => {
+        if (err2) return res.status(500).send('Database error');
+        res.redirect('/cart');});});});
 
 //remove item from cart 
  app.post('/cart/remove/:id', (req, res) => {
   if (!req.session.user) {
-    return res.redirect('/login');
-  }
-
+    return res.redirect('/login');}
   const userId = req.session.user.id;
   const productId = req.params.id;
-
-  // Check current quantity
+  
   const checkSql = 'SELECT quantity FROM cart WHERE userId = ? AND productId = ?';
   connection.query(checkSql, [userId, productId], (err, results) => {
     if (err) {
       console.error('Error checking cart item:', err);
-      return res.status(500).send('Database error');
-    }
+      return res.status(500).send('Database error');}
 
     if (results.length === 0) {
-      return res.redirect('/cart'); // nothing to remove
-    }
+      return res.redirect('/cart');}
 
     const qty = results[0].quantity;
-
     if (qty > 1) {
       // Decrement quantity
       const updateSql = 'UPDATE cart SET quantity = quantity - 1 WHERE userId = ? AND productId = ?';
       connection.query(updateSql, [userId, productId], (err2) => {
         if (err2) {
           console.error('Error updating cart item:', err2);
-          return res.status(500).send('Database error');
-        }
-        res.redirect('/cart');
-      });
+          return res.status(500).send('Database error');}
+        res.redirect('/cart');});
     } else {
       // Delete row if only 1 left
       const deleteSql = 'DELETE FROM cart WHERE userId = ? AND productId = ?';
@@ -582,11 +561,7 @@ app.post('/cart/add/:id', (req, res) => {
           console.error('Error deleting cart item:', err3);
           return res.status(500).send('Database error');
         }
-        res.redirect('/cart');
-      });
-    }
-  });
-});
+        res.redirect('/cart');});}});});
 
 // GET route for checkout page
 app.get('/checkout', (req, res) => {
@@ -607,7 +582,7 @@ WHERE c.userId = ?`;
     res.render('checkout', {
       user: req.session.user,
       cart: results});});});
-      
+
 //checkout
 app.post('/checkout', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
@@ -616,12 +591,16 @@ app.post('/checkout', (req, res) => {
   const { address, cardNumber, expiry, cvv } = req.body;
 
   if (!cardNumber || !expiry || !cvv) {
-    return res.status(400).send('Invalid payment details');}
+    return res.status(400).send('Invalid payment details');
+  }
 
-  const cartSql = `SELECT c.productId, c.quantity, p.stock
+  const cartSql = `
+    SELECT c.productId, c.quantity, p.stock
     FROM cart c
     JOIN products p ON c.productId = p.productId
-    WHERE c.userId = ?`;
+    WHERE c.userId = ?
+  `;
+
   connection.query(cartSql, [userId], (err, items) => {
     if (err) return res.status(500).send('Database error');
 
@@ -630,28 +609,37 @@ app.post('/checkout', (req, res) => {
         const newStock = item.stock - item.quantity;
 
         if (newStock > 0) {
-          // reduce qty if >0
+          // ✅ Reduce stock normally
           connection.query(
             'UPDATE products SET stock = ? WHERE productId = ?',
             [newStock, item.productId],
             err2 => (err2 ? reject(err2) : resolve())
           );
         } else {
-          // mark product as out of stock once it hits 0
+          // ✅ Mark product as out of stock
           connection.query(
             'UPDATE products SET stock = 0 WHERE productId = ?',
             [item.productId],
-            err3 => (err3 ? reject(err3) : resolve()));}});});
+            err3 => (err3 ? reject(err3) : resolve())
+          );
+        }
+      });
+    });
 
     Promise.all(updates)
       .then(() => {
-        // clear cart after checkout (reduce qty)
+        // ✅ Clear the user’s cart after checkout
         connection.query('DELETE FROM cart WHERE userId = ?', [userId], err4 => {
           if (err4) return res.status(500).send('Database error');
-          res.render('checkout-success', { address });});})
+          res.render('checkout-success', { address });
+        });
+      })
       .catch(err5 => {
         console.error('Error during checkout:', err5);
-        res.status(500).send('Checkout failed');});});});
+        res.status(500).send('Checkout failed');
+      });
+  });
+});
 
 
 
