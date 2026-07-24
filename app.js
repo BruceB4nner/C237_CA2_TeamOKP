@@ -290,7 +290,31 @@ app.get('/products/:id', (req, res) => {
     });
 });
 
+//Edit Product (Kai Peng)
+app.get('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
 
+    const productId = req.params.id;
+
+    const sql = "SELECT * FROM products WHERE productId = ?";
+
+    connection.query(sql, [productId], (err, results) => {
+
+        if (err) throw err;
+
+        if (results.length === 0) {
+            return res.send("Product not found");
+        }
+
+        res.render("editProduct", {
+            product: results[0],
+            user: req.session.user
+        });
+
+    });
+
+});
+
+// add product routes (myiesha)
 app.get('/addProduct', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');}
@@ -305,33 +329,91 @@ app.post('/addProduct', (req, res) => {
         return res.redirect('/login');
     }
 
-    const { productName, category, description, quantity, price, image } = req.body;
-    const userId = req.session.user.userId;
+    const { productName, category, description, stock, price, image } = req.body;
+    const userId = req.session.user.id;
 
     const sql = `
         INSERT INTO products
-        (productName, category, description, quantity, price, image, stock, userId)
-        VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+        (productName, category, description, price, image, stock, userId)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     connection.query(
         sql,
-        [productName, category, description, quantity, price, image, userId],
+        [
+            productName,
+            category,
+            description,
+            price,
+            image,
+            stock,
+            userId
+        ],
         (err) => {
             if (err) throw err;
             res.redirect('/products');
         });});
 
-// wishlist routes (myiesha)
-app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
+//Edit Product (Kai Peng)
+app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
 
-    const userId = req.session.user.userId;
     const productId = req.params.id;
+
+    const {
+        productName,
+        category,
+        description,
+        stock,
+        price,
+        image
+    } = req.body;
+
+    const sql = `
+        UPDATE products
+        SET
+            productName = ?,
+            category = ?,
+            description = ?,
+            stock = ?,
+            price = ?,
+            image = ?
+        WHERE productId = ?
+    `;
+
+    connection.query(
+        sql,
+        [
+            productName,
+            category,
+            description,
+            stock,
+            price,
+            image,
+            productId
+        ],
+        (err) => {
+
+            if (err) throw err;
+
+            res.redirect("/products");
+
+        }
+    );
+
+});
+
+// wishlist routes (myiesha)
+app.post('/wishlist/add/:productid', checkAuthenticated, (req, res) => {
+
+    const userId = req.session.user.id;
+    const productId = req.params.productid;
 
     const checkSql = `
     SELECT * FROM wishlist
     WHERE userId = ? AND productId = ?
     `;
+    console.log("User ID:", userId);
+    console.log("Product ID:", productId);
 
     connection.query(checkSql, [userId, productId], (err, results) => {
         if (err) throw err;
@@ -361,6 +443,10 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
             console.log(err);
             return res.send("Database Error");}
 
+        // 👇 ADD THESE
+        console.log("User ID:", userId);
+        console.log("Wishlist Results:", results);
+
         res.render("wishlist", {
             products: results,
             user: req.session.user
@@ -369,8 +455,7 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
 app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
     const sql = `
         DELETE FROM wishlist
-        WHERE productId = ?
-        AND userId = ?
+        WHERE productId = ? AND userId = ?
     `;
     connection.query(sql, [req.params.id, req.session.user.id], (err) => {
         if (err) {
@@ -381,16 +466,26 @@ app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
 
 // delete products
 app.post('/products/delete/:id', (req, res) => {
+
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.status(403).send('Forbidden: Admins only');
     }
 
     const productId = req.params.id;
-    connection.query('DELETE FROM products WHERE productId = ?', [productId], (err) => {
+
+    const sql = `
+        DELETE FROM products
+        WHERE productId = ?
+    `;
+
+    connection.query(sql, [productId], (err) => {
+
         if (err) throw err;
+
         req.flash('success', 'Product deleted successfully');
         res.redirect('/products');
     });
+
 });
 
 app.get('/angie', (req, res) => { res.render('angie'); });

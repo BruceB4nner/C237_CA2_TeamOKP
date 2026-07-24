@@ -80,18 +80,26 @@
       <ul class="navbar-nav">
         <% if (typeof user !== 'undefined' && user) { %>
           <li class="nav-item">
-            <a class="nav-link" href="/wishlist"> Wishlist</a>
-          </li>
+    <a class="nav-link" href="/wishlist">❤️ Wishlist</a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="/addProduct">➕ Add Product</a>
+</li>
           <li class="nav-item dropdown ms-lg-2">
             <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
               Hi, <%= user.username %>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="/profile">Profile</a></li>
-              <li><a class="dropdown-item" href="/cart">My Cart</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
-            </ul>
+    <li><a class="dropdown-item" href="/profile">Profile</a></li>
+    <li><a class="dropdown-item" href="/cart">My Cart</a></li>
+    <li><a class="dropdown-item" href="/wishlist">Wishlist</a></li>
+
+    <li><a class="dropdown-item" href="/addProduct">Add Product</a></li>
+
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item text-danger" href="/logout">Sign Out</a></li>
+</ul>
           </li>
         <% } else { %>
           <li class="nav-item">
