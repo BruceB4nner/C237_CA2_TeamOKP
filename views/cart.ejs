@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/style.css" rel="stylesheet"> 
+  <title>My Cart</title>
+</head>
+<body>
+  <%- include('partials/header.ejs') %>
+
+  <main class="container my-5">
+  <h2 class="fw-bold mb-4 text-center">Your Cart</h2>
+
+  <% if (cart && cart.length > 0) { %>
+    <div class="row g-3">
+      <% cart.forEach(item => { %>
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="row g-0 align-items-center">
+              <!-- Product image -->
+              <div class="col-md-3 text-center">
+                <img src="<%= item.image || 'https://via.placeholder.com/200' %>" 
+                     class="img-fluid rounded-start" 
+                     alt="<%= item.productName %>">
+              </div>
+
+              <!-- Product details -->
+              <div class="col-md-6">
+                <div class="card-body">
+                  <h5 class="card-title"><%= item.productName %></h5>
+                  <p class="card-text text-muted">Price: $<%= item.price %></p>
+                  <p class="card-text">Quantity: <%= item.quantity %></p>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="col-md-3 text-center">
+                <form action="/cart/remove/<%= item.productId %>" method="POST">
+                  <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <!-- Checkout button -->
+    <div class="text-center mt-4">
+      <a href="/checkout" class="btn btn-success btn-lg">Proceed to Checkout</a>
+    </div>
+  <% } else { %>
+    <p class="text-center text-muted">Your cart is empty.</p>
+  <% } %>
+</main>
+
+
+  <%- include('partials/footer.ejs') %>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

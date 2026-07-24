@@ -293,8 +293,7 @@ app.get('/products/:id', (req, res) => {
 
 app.get('/addProduct', (req, res) => {
     if (!req.session.user) {
-        return res.redirect('/login');
-    }
+        return res.redirect('/login');}
 
     res.render('addProducts', {
         user: req.session.user
@@ -321,9 +320,7 @@ app.post('/addProduct', (req, res) => {
         (err) => {
             if (err) throw err;
             res.redirect('/products');
-        }
-    );
-});
+        });});
 
 // wishlist routes (myiesha)
 app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
@@ -337,33 +334,20 @@ app.post('/wishlist/add/:id', checkAuthenticated, (req, res) => {
     `;
 
     connection.query(checkSql, [userId, productId], (err, results) => {
-
         if (err) throw err;
-
         if (results.length > 0) {
-            return res.redirect('/wishlist');
-        }
-
+            return res.redirect('/wishlist');}
         const insertSql = `
         INSERT INTO wishlist (userId, productId)
         VALUES (?, ?)
         `;
 
         connection.query(insertSql, [userId, productId], (err) => {
-
             if (err) throw err;
-
-            res.redirect('/wishlist');
-        });
-
-    });
-
-});
+            res.redirect('/wishlist');});});});
 
 app.get('/wishlist', checkAuthenticated, (req, res) => {
-
     const userId = req.session.user.userId;
-
     const sql = `
         SELECT products.*
         FROM wishlist
@@ -371,43 +355,29 @@ app.get('/wishlist', checkAuthenticated, (req, res) => {
         ON wishlist.productId = products.productId
         WHERE wishlist.userId = ?
     `;
-
     connection.query(sql, [userId], (err, results) => {
 
         if (err) {
             console.log(err);
-            return res.send("Database Error");
-        }
+            return res.send("Database Error");}
 
         res.render("wishlist", {
             products: results,
             user: req.session.user
-        });
-
-    });
-
-});
+        });});});
 
 app.post('/wishlist/delete/:id', checkAuthenticated, (req, res) => {
-
     const sql = `
         DELETE FROM wishlist
         WHERE productId = ?
         AND userId = ?
     `;
-
     connection.query(sql, [req.params.id, req.session.user.id], (err) => {
-
         if (err) {
             console.log(err);
-            return res.send("Database Error");
-        }
-
+            return res.send("Database Error");}
         res.redirect("/wishlist");
-
-    });
-
-});
+});});
 
 // delete products
 app.post('/products/delete/:id', (req, res) => {
@@ -428,6 +398,44 @@ app.get('/josh', (req, res) => { res.render('josh'); });
 app.get('/kp', (req, res) => { res.render('kaipeng'); });
 app.get('/myiesha', (req, res) => { res.render('myiesha'); });
 app.get('/nx', (req, res) => { res.render('ningxin'); });
+
+app.get('/cart', (req, res) => {
+  if (!req.session.user) {return res.redirect('/login');}
+
+  const userId = req.session.user.id;
+  const sql = `
+    select c.*, p.productName, p.price, p.image
+    from cart c
+    join products p on c.productId = p.productId
+    where c.userId = ?`;
+
+  connection.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching cart items:', err);
+      return res.status(500).send('Database error');}
+
+    res.render('cart', {
+      user: req.session.user,
+      cart: results || []});
+  });
+});
+app.post('/cart/add/:id', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');}
+  const userId = req.session.user.id;
+  const productId = req.params.id;
+  const sql = `
+    INSERT INTO cart (userId, productId, quantity)
+    VALUES (?, ?, 1)
+    ON DUPLICATE KEY UPDATE quantity = quantity + 1
+  `;
+  connection.query(sql, [userId, productId], (err) => {
+    if (err) {
+      console.error('Error adding to cart:', err);
+      return res.status(500).send('Database error');}
+    req.flash('success', 'Item added to cart!');
+    res.redirect('/products');
+  });});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
