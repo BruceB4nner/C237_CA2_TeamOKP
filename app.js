@@ -167,10 +167,18 @@ app.get('/products', (req, res) => {
     let sql = "SELECT * FROM products WHERE 1=1";
     let params = [];
 
+    // 1. Grab search query along with other filters
+    const search = req.query.search || '';
     const category = req.query.category || '';
     const minPrice = req.query.minPrice || '';
     const maxPrice = req.query.maxPrice || '';
     const sort = req.query.sort || '';
+
+    // 2. Append Search Filter (matches product name)
+    if (search.trim() !== '') {
+        sql += " AND productName LIKE ?";
+        params.push(`%${search.trim()}%`);
+    }
 
     // Append Category filter
     if (category.trim() !== '') {
@@ -206,8 +214,10 @@ app.get('/products', (req, res) => {
             return res.status(500).send("Server Error");
         }
 
+        // 3. Send 'search' back to EJS template
         res.render('products', {
             products: results,
+            search: search,
             selectedCategory: category,
             selectedSort: sort,
             minPrice: minPrice,
@@ -216,10 +226,6 @@ app.get('/products', (req, res) => {
         });
     });
 });
-
-// ==========================================
-// AUTHENTICATION ROUTES (Josh)
-// ==========================================
 
 app.get('/register', (req, res) => {
     res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
