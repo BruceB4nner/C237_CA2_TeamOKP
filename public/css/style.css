@@ -1,21 +1,13 @@
-/* Global Font */
-body {
-    font-family: "Poppins", sans-serif;
+h2{
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    font-family: "Poppins", sans-serif;
-    font-weight: 600;
-}
-
-p,
-a,
-button,
-input,
-label,
-textarea,
-select {
-    font-family: "Poppins", sans-serif;
+p{
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-style: italic;
 }
 /*angie - testing google fonts will style everything later*/
 .card,
