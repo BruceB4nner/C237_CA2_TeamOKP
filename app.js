@@ -161,7 +161,6 @@ app.get('/', (req, res) => {
 
 
 // NING XIN: PRODUCT VIEWING, CATEGORY FILTERING, SORTING & PRICE RANGE
-
 app.get('/products', (req, res) => {
     let sql = "SELECT * FROM products WHERE 1=1";
     let params = [];
@@ -210,8 +209,7 @@ app.get('/products', (req, res) => {
     connection.query(sql, params, (err, results) => {
         if (err) {
             console.error("Database error:", err);
-            return res.status(500).send("Server Error");
-        }
+            return res.status(500).send("Server Error");}
 
         // 3. Send 'search' back to EJS template
         res.render('products', {
@@ -221,10 +219,7 @@ app.get('/products', (req, res) => {
             selectedSort: sort,
             minPrice: minPrice,
             maxPrice: maxPrice,
-            user: req.session.user || null
-        });
-    });
-});
+            user: req.session.user || null});});});
 
 //josh//
 app.get('/register', (req, res) => {
@@ -241,22 +236,18 @@ app.post('/register', validateRegistration, (req, res) => {
         res.redirect('/login');
     });
 });
-
 app.get('/login', (req, res) => {
     res.render('login', {
         messages: req.flash('success'),
         errors: req.flash('error')
     });
 });
-
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
         req.flash('error', 'All fields are required.');
-        return res.redirect('/login');
-    }
-
+        return res.redirect('/login');}
     const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA2(?,256)';
     connection.query(sql, [email, password], (err, results) => {
         if (err) throw err;
@@ -267,10 +258,7 @@ app.post('/login', (req, res) => {
             res.redirect('/');
         } else {
             req.flash('error', 'Invalid email or password.');
-            res.redirect('/login');
-        }
-    });
-});
+            res.redirect('/login');}});});
 
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
@@ -280,6 +268,7 @@ app.get('/logout', (req, res) => {
 });
 
 // 1. Single product route (ensure it renders 'product')
+// angie - change the render to productDetails
 app.get('/products/:id', (req, res) => {
     const productId = req.params.id;
     const sql = 'SELECT * FROM products WHERE productId = ?';
@@ -288,11 +277,10 @@ app.get('/products/:id', (req, res) => {
         if (err) throw err;
 
         if (results.length === 0) {
-            return res.status(404).send('Product not found');
-        }
+            return res.status(404).send('Product not found')}
 
         const product = results[0];
-        res.render('product', { product, user: req.session.user });
+        res.render('productDetails', { product, user: req.session.user });
     });
 });
 
@@ -459,6 +447,7 @@ app.post('/products/delete/:id', (req, res) => {
         req.flash('success', 'Product deleted successfully');
         res.redirect('/products');});});
 
+//angies routes all below (i think)
 app.get('/angie', (req, res) => { res.render('angie'); });
 app.get('/josh', (req, res) => { res.render('josh'); });
 app.get('/kp', (req, res) => { res.render('kaipeng'); });
@@ -466,44 +455,34 @@ app.get('/myiesha', (req, res) => { res.render('myiesha'); });
 app.get('/nx', (req, res) => { res.render('ningxin'); });
 
 // cart stuff (angie)
-app.get('/cart', (req, res) => {
-  if (!req.session.user) {return res.redirect('/login');}
+app.get('/cart', (req, res) => {if (!req.session.user) {return res.redirect('/login');}
 
   const userId = req.session.user.id;
-  const sql = `
-    select c.*, p.productName, p.price, p.image
+  const sql = `select c.*, p.productName, p.price, p.image
     from cart c
     join products p on c.productId = p.productId
     where c.userId = ?`;
 
-  connection.query(sql, [userId], (err, results) => {
-    if (err) {
+  connection.query(sql, [userId], (err, results) => {if (err) {
       console.error('Error fetching cart items:', err);
       return res.status(500).send('Database error');}
 
-    res.render('cart', {
-      user: req.session.user,
-      cart: results || []});});});
+    res.render('cart', {user: req.session.user,cart: results || []});});});
 
 app.post('/cart/add/:id', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
-
   const userId = req.session.user.id;
   const productId = req.params.id;
 
-  // Check product stock first
+  // Check stock
   connection.query('SELECT stock FROM products WHERE productId = ?', [productId], (err, results) => {
     if (err) return res.status(500).send('Database error');
     if (results.length === 0) return res.status(404).send('Product not found');
-
     const stock = results[0].stock;
-
     if (stock <= 0) {
       // Prevent adding sold‑out product
-      return res.status(400).send('This product is out of stock');
-    }
+      return res.status(400).send('This product is out of stock');}
 
-    // Otherwise proceed to add to cart
     connection.query(
       'INSERT INTO cart (userId, productId, quantity) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE quantity = quantity + 1',
       [userId, productId],
@@ -542,8 +521,7 @@ app.post('/cart/add/:id', (req, res) => {
       connection.query(deleteSql, [userId, productId], (err3) => {
         if (err3) {
           console.error('Error deleting cart item:', err3);
-          return res.status(500).send('Database error');
-        }
+          return res.status(500).send('Database error');}
         res.redirect('/cart');});}});});
 
 // GET route for checkout page
@@ -592,38 +570,40 @@ app.post('/checkout', (req, res) => {
         const newStock = item.stock - item.quantity;
 
         if (newStock > 0) {
-          // ✅ Reduce stock normally
+          // reeduce stock
           connection.query(
             'UPDATE products SET stock = ? WHERE productId = ?',
             [newStock, item.productId],
             err2 => (err2 ? reject(err2) : resolve())
           );
         } else {
-          // ✅ Mark product as out of stock
+          // out of stock
           connection.query(
             'UPDATE products SET stock = 0 WHERE productId = ?',
             [item.productId],
-            err3 => (err3 ? reject(err3) : resolve())
-          );
-        }
-      });
-    });
+            err3 => (err3 ? reject(err3) : resolve()));}});});
 
-    Promise.all(updates)
-      .then(() => {
-        // ✅ Clear the user’s cart after checkout
+    //after checkout
+    Promise.all(updates).then(() => {
         connection.query('DELETE FROM cart WHERE userId = ?', [userId], err4 => {
           if (err4) return res.status(500).send('Database error');
-          res.render('checkout-success', { address });
-        });
-      })
+          res.render('checkout-success', { address });});})
       .catch(err5 => {
         console.error('Error during checkout:', err5);
-        res.status(500).send('Checkout failed');
-      });
-  });
-});
+        res.status(500).send('Checkout failed');});});});
 
+// Show only logged in users listings
+app.get('/userproducts', (req, res) => {if (!req.session.user) {
+    return res.redirect('/login');}
+  const userId = req.session.user.id;
+  const sql = 'SELECT * FROM products WHERE userId = ?';
+
+  connection.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching user products:', err);
+      return res.status(500).send('Database error');}
+
+    res.render('userproducts', {user: req.session.user,products: results});});});
 
 
 const PORT = process.env.PORT || 3000;

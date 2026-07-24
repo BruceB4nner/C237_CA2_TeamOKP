@@ -15,6 +15,7 @@
         <p class="card-text">Price: $<%= product.price %></p>
         <p class="card-text">Stock: <%= product.stock %></p>
         <p class="card-text">Description: <%= product.description %></p>
+<br>
 
         <% if (user && user.role === 'admin') { %>
           <form action="/products/delete/<%= product.productId %>" method="POST">
