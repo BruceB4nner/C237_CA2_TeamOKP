@@ -402,7 +402,7 @@ app.post('/editProduct/:id', isOwnerOrAdmin, (req, res) => {
 
 // wishlist routes (myiesha)
 app.post('/wishlist/add/:productid', checkAuthenticated, (req, res) => {
-
+    console.log(req.session.user);
     const userId = req.session.user.id;
     const productId = req.params.productid;
 
@@ -427,7 +427,7 @@ app.post('/wishlist/add/:productid', checkAuthenticated, (req, res) => {
             res.redirect('/wishlist');});});});
 
 app.get('/wishlist', checkAuthenticated, (req, res) => {
-    const userId = req.session.user.userId;
+    const userId = req.session.user.id;
     const sql = `
         SELECT products.*
         FROM wishlist
